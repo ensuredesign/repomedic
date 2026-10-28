@@ -49,6 +49,7 @@ export default function UserProfilePage() {
   const [passwordMessage, setPasswordMessage] = useState<{ ok: boolean; text: string } | null>(
     null,
   );
+  const [profileTab, setProfileTab] = useState<'all' | 'identity' | 'security'>('all');
 
   async function loadProfile() {
     setLoading(true);
@@ -297,6 +298,34 @@ export default function UserProfilePage() {
 
             {/* Right column: Edit Profile Form + Password Update */}
             <div className="lg:col-span-8 space-y-6">
+              <div
+                role="tablist"
+                aria-label="Profile Settings Tabs"
+                className="flex flex-wrap gap-1.5 rounded-[10px] border border-[#E8E8EC] bg-[#FFFFFF] p-1.5"
+              >
+                {[
+                  { key: 'all' as const, label: 'All Profile Settings' },
+                  { key: 'identity' as const, label: 'Identity, GitHub & Resend' },
+                  { key: 'security' as const, label: 'Password & Auth Security' },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={profileTab === t.key}
+                    onClick={() => setProfileTab(t.key)}
+                    className={`rounded-[7px] px-3.5 py-2 text-[13px] font-medium transition-all ${
+                      profileTab === t.key
+                        ? 'bg-[#6366F1] text-[#FFFFFF] shadow-xs'
+                        : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {(profileTab === 'all' || profileTab === 'identity') && (
               <section className="genesis-card p-6">
                 <h2 className="text-[18px] font-bold text-[#0A0A0A] font-display">
                   Edit Profile &amp; Notification Settings
@@ -444,8 +473,10 @@ export default function UserProfilePage() {
                   </div>
                 </form>
               </section>
+              )}
 
               {/* Password Management Card */}
+              {(profileTab === 'all' || profileTab === 'security') && (
               <section className="genesis-card p-6">
                 <div className="flex items-center gap-2 text-[16px] font-bold text-[#0A0A0A] font-display">
                   <KeyRound className="h-4 w-4 text-[#6366F1]" aria-hidden="true" />
@@ -486,6 +517,7 @@ export default function UserProfilePage() {
                   </p>
                 )}
               </section>
+              )}
             </div>
           </div>
         )}

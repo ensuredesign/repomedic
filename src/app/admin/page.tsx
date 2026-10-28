@@ -60,6 +60,9 @@ export default function AdminPanelPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [switchingToAdmin, setSwitchingToAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeAdminTab, setActiveAdminTab] = useState<
+    'all' | 'users' | 'runs' | 'infrastructure'
+  >('all');
 
   const [kpis, setKpis] = useState<AdminKpis | null>(null);
   const [integrations, setIntegrations] = useState<AdminIntegrations | null>(null);
@@ -252,6 +255,35 @@ export default function AdminPanelPage() {
 
         {!loading && !accessDenied && kpis && integrations && (
           <>
+            {/* Interactive Admin Control Plane Tabs */}
+            <div
+              role="tablist"
+              aria-label="Admin Control Plane Views"
+              className="flex flex-wrap gap-1.5 rounded-[10px] border border-[#E8E8EC] bg-[#FFFFFF] p-1.5"
+            >
+              {[
+                { key: 'all' as const, label: 'All Governance Panels' },
+                { key: 'users' as const, label: `User Directory & RBAC (${users.length})` },
+                { key: 'runs' as const, label: `Global Runs Audit Log (${runs.length})` },
+                { key: 'infrastructure' as const, label: 'Infrastructure & Security Guardrails' },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeAdminTab === t.key}
+                  onClick={() => setActiveAdminTab(t.key)}
+                  className={`rounded-[7px] px-3.5 py-2 text-[13px] font-medium transition-all ${
+                    activeAdminTab === t.key
+                      ? 'bg-[#6366F1] text-[#FFFFFF] shadow-xs'
+                      : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
             {/*KPI Strip*/}
             <section
               aria-label="Platform KPIs"
@@ -324,6 +356,7 @@ export default function AdminPanelPage() {
             </section>
 
             {/* Infrastructure & Security Governance Status */}
+            {(activeAdminTab === 'all' || activeAdminTab === 'infrastructure') && (
             <section className="genesis-card p-5">
               <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
                 Live Infrastructure &amp; Security Guardrails
@@ -372,8 +405,10 @@ export default function AdminPanelPage() {
                 </div>
               </div>
             </section>
+            )}
 
             {/* User & Role Management Directory */}
+            {(activeAdminTab === 'all' || activeAdminTab === 'users') && (
             <section className="genesis-card overflow-hidden">
               <div className="border-b border-[#E8E8EC] bg-[#FAFAFA] px-5 py-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -455,8 +490,10 @@ export default function AdminPanelPage() {
                 </table>
               </div>
             </section>
+            )}
 
             {/* Global Investigation Runs & Audit Trail */}
+            {(activeAdminTab === 'all' || activeAdminTab === 'runs') && (
             <section className="genesis-card overflow-hidden">
               <div className="border-b border-[#E8E8EC] bg-[#FAFAFA] px-5 py-4">
                 <h2 className="text-[17px] font-bold text-[#0A0A0A] font-display">
@@ -545,6 +582,7 @@ export default function AdminPanelPage() {
                 </table>
               </div>
             </section>
+            )}
           </>
         )}
       </main>

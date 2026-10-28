@@ -6,10 +6,10 @@ import {
   FileCheck2,
   GitPullRequestDraft,
   Lock,
-  ShieldCheck,
   Terminal,
 } from 'lucide-react';
 import { NavHeader } from '@/components/nav-header';
+import { RepoMedicLogo } from '@/components/repomedic-logo';
 
 export default function LandingPage() {
   return (
@@ -237,10 +237,10 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-[#E8E8EC] bg-[#FFFFFF] py-8">
-        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 text-[13px] text-[#6B6B6B]">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[#6366F1]" aria-hidden="true" />
-            <span>RepoMedic — Diagnose. Patch. Prove. (MIT License)</span>
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 text-[13px] text-[#52525B]">
+          <div className="flex items-center gap-3">
+            <RepoMedicLogo size="sm" showTagline={false} />
+            <span>— Autonomous Production Incident Investigator (MIT License)</span>
           </div>
           <div className="flex items-center gap-4 font-mono text-[12px]">
             <span className="inline-flex items-center gap-1">
