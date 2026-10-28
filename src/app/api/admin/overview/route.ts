@@ -33,13 +33,13 @@ export async function GET() {
     supabase
       .from('runs')
       .select(
-        'id, incident_id, user_id, status, attempt_count, model_id, input_tokens, output_tokens, estimated_cost_usd, created_at',
+        'id, incident_id, user_id, status, attempt_count, model_id, input_tokens, output_tokens, estimated_cost_usd, is_demo, created_at',
       )
       .order('created_at', { ascending: false })
       .limit(50),
     supabase
       .from('pull_requests')
-      .select('id, run_id, user_id, pr_number, pr_url, head_branch, base_branch, draft, created_at')
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(50),
   ]);
