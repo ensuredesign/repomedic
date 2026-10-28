@@ -26,6 +26,7 @@ export interface ProfileRow {
   github_username: string | null;
   notification_email: string | null;
   bio: string | null;
+  welcome_email_sent_at?: string | null;
   created_at: string;
   updated_at: string;
 }

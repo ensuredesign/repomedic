@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { supabaseFetchWithRetry } from '@/lib/supabase/client';
@@ -220,5 +221,145 @@ describe('Milestone 1 Gate — Live Supabase Auth, Schema, Atomic RPCs, and RLS 
       .limit(10);
     expect(allProfilesErr).toBeNull();
     expect((allProfiles ?? []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('4. verifies full Registration -> Profile Update -> Change Password -> Forgot Password Reset & Separate Account Isolation', async () => {
+    const userClient = makeAnonClient();
+    const otherClient = makeAnonClient();
+
+    const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const regEmail = `reg-user-${suffix}@repomedic.local`;
+    const initialPassword = 'InitialPass!2026';
+    const rotatedPassword = 'RotatedPass!2026';
+    const recoveredPassword = 'RecoveredPass!2026';
+
+    // 1. Register new user with profile metadata
+    const { data: signUpData, error: signUpErr } = await userClient.auth.signUp({
+      email: regEmail,
+      password: initialPassword,
+      options: {
+        data: {
+          full_name: 'Dr. Kavya Nair',
+          organization: 'Quantum SRE Labs',
+          job_title: 'Lead Reliability Architect',
+          github_username: 'ensuredesign',
+        },
+      },
+    });
+    expect(signUpErr).toBeNull();
+    expect(signUpData.user?.id).toBeTruthy();
+
+    if (!signUpData.session) {
+      const { error: loginErr } = await userClient.auth.signInWithPassword({
+        email: regEmail,
+        password: initialPassword,
+      });
+      expect(loginErr).toBeNull();
+    }
+
+    const userId = signUpData.user!.id;
+
+    // Verify isolated profile row was automatically provisioned
+    const { data: myProfile, error: profErr } = await userClient
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    expect(profErr).toBeNull();
+    expect(myProfile?.email).toBe(regEmail);
+    expect(myProfile?.display_name).toBe('Dr. Kavya Nair');
+    expect(myProfile?.organization).toBe('Quantum SRE Labs');
+
+    // 2. Update profile fields and verify persistence in user's isolated account
+    const { data: updatedProfile, error: updErr } = await userClient
+      .from('profiles')
+      .update({
+        display_name: 'Kavya Nair, PhD',
+        organization: 'Nebius Cloud SRE',
+        job_title: 'VP of Autonomous Systems',
+        bio: 'Testing isolated user account storage.',
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
+    expect(updErr).toBeNull();
+    expect(updatedProfile?.display_name).toBe('Kavya Nair, PhD');
+    expect(updatedProfile?.organization).toBe('Nebius Cloud SRE');
+
+    // Verify another user (judge@repomedic.dev) cannot read or modify this user's profile
+    await otherClient.auth.signInWithPassword({
+      email: 'judge@repomedic.dev',
+      password: 'RepoMedicJudge!2026',
+    });
+    const { data: otherRead } = await otherClient
+      .from('profiles')
+      .select('*')
+      .eq('id', userId);
+    expect(otherRead).toEqual([]);
+
+    // 3. Change password via authenticated RPC (change_own_password)
+    const { data: changeRes, error: changeErr } = await userClient.rpc('change_own_password', {
+      p_new_password: rotatedPassword,
+      p_current_password: initialPassword,
+    });
+    expect(changeErr).toBeNull();
+    expect((changeRes as { updated?: boolean })?.updated).toBe(true);
+
+    // Verify old password fails and rotated password succeeds
+    const verifyClient1 = makeAnonClient();
+    const { error: oldLoginErr } = await verifyClient1.auth.signInWithPassword({
+      email: regEmail,
+      password: initialPassword,
+    });
+    expect(oldLoginErr).not.toBeNull();
+
+    const { error: rotatedLoginErr } = await verifyClient1.auth.signInWithPassword({
+      email: regEmail,
+      password: rotatedPassword,
+    });
+    expect(rotatedLoginErr).toBeNull();
+
+    // 4. Forgot Password flow: request 6-digit recovery code -> consume -> sign in with recovered password
+    const resetCode = '849204';
+    const tokenHash = crypto.createHash('sha256').update(resetCode).digest('hex');
+
+    const anonResetClient = makeAnonClient();
+    const { data: reqTokenRes, error: reqTokenErr } = await anonResetClient.rpc(
+      'request_password_reset_token',
+      {
+        p_email: regEmail,
+        p_token_hash: tokenHash,
+      },
+    );
+    expect(reqTokenErr).toBeNull();
+    expect((reqTokenRes as { found?: boolean })?.found).toBe(true);
+
+    const { data: consumeRes, error: consumeErr } = await anonResetClient.rpc(
+      'consume_password_reset_token',
+      {
+        p_email: regEmail,
+        p_token_hash: tokenHash,
+        p_new_password: recoveredPassword,
+      },
+    );
+    expect(consumeErr).toBeNull();
+    expect((consumeRes as { reset?: boolean })?.reset).toBe(true);
+
+    // Replaying the same recovery code must fail
+    const { error: replayErr } = await anonResetClient.rpc('consume_password_reset_token', {
+      p_email: regEmail,
+      p_token_hash: tokenHash,
+      p_new_password: 'AnotherPassword!2026',
+    });
+    expect(replayErr).not.toBeNull();
+
+    // Sign in with recovered password
+    const finalClient = makeAnonClient();
+    const { data: finalAuth, error: finalLoginErr } = await finalClient.auth.signInWithPassword({
+      email: regEmail,
+      password: recoveredPassword,
+    });
+    expect(finalLoginErr).toBeNull();
+    expect(finalAuth.user?.id).toBe(userId);
   });
 });

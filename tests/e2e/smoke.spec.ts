@@ -59,6 +59,14 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
     await page.goto('/auth');
     await expect(page.locator('#one-click-user-login')).toBeVisible();
     await expect(page.locator('#one-click-admin-login')).toBeVisible();
+    await expect(page.locator('#forgot-password-link')).toBeVisible();
+
+    // Verify Forgot Password & Create Account modes render cleanly
+    await page.locator('#forgot-password-link').click();
+    await expect(page.locator('h1')).toContainText('Forgot Your Password?');
+    await page.locator('#tab-signup').click();
+    await expect(page.locator('h1')).toContainText('Register Developer Account');
+    await page.locator('#tab-signin').click();
 
     const authOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;
@@ -87,6 +95,10 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
     await page.goto('/app/profile');
     await expect(page.locator('h1')).toContainText('Developer Profile & Preferences');
     await expect(page.locator('#profile-display-name')).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('#resend-welcome-email-btn')).toBeVisible();
+    await expect(page.locator('#profile-new-password')).toBeVisible();
+    await expect(page.locator('#update-password-btn')).toBeVisible();
+    await expect(page.getByText('Per-User Data Isolation (RLS)')).toBeVisible();
 
     const profileOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;
