@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { recallRepositoryEpisodicMemory } from '@/lib/agent/memory';
 import { runIncidentCopilotWithNemotron } from '@/lib/ai/nebius';
+import { searchIncidentIntelligenceWithTavily } from '@/lib/ai/tavily';
 import { apiErrorResponse, enforceRateLimit } from '@/lib/security/api-guard';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const CopilotRequestSchema = z.object({
-  workflow: z.enum(['sre_postmortem', 'iteration_audit', 'canary_runbook', 'custom']),
+  workflow: z.enum([
+    'sre_postmortem',
+    'iteration_audit',
+    'canary_runbook',
+    'tavily_web_research',
+    'custom',
+  ]),
   customQuestion: z.string().trim().max(400).optional(),
 });
 
@@ -29,18 +36,25 @@ export async function GET(
 
   const { data: incident } = await supabase
     .from('incidents')
-    .select('repository_full_name')
+    .select('title, error_text_redacted, repository_full_name')
     .eq('id', run.incident_id)
     .single();
 
   const repoName = incident?.repository_full_name ?? 'ensuredesign/repomedic-fixture';
-  const memory = await recallRepositoryEpisodicMemory({
-    supabase,
-    repositoryFullName: repoName,
-    excludeRunId: run.is_demo ? undefined : run.id,
-  });
+  const [memory, tavily] = await Promise.all([
+    recallRepositoryEpisodicMemory({
+      supabase,
+      repositoryFullName: repoName,
+      excludeRunId: run.is_demo ? undefined : run.id,
+    }),
+    searchIncidentIntelligenceWithTavily({
+      incidentTitle:
+        incident?.title ?? 'B2B tax-exempt orders (0% taxRatePercent) charged default tax',
+      errorText: incident?.error_text_redacted,
+    }),
+  ]);
 
-  return NextResponse.json({ memory });
+  return NextResponse.json({ memory, tavily });
 }
 
 export async function POST(
@@ -112,11 +126,21 @@ export async function POST(
   const baselineTest = (tests ?? []).find((t) => t.kind === 'baseline');
   const candidateTest = (tests ?? []).filter((t) => t.kind === 'candidate').slice(-1)[0];
 
-  const memory = await recallRepositoryEpisodicMemory({
-    supabase,
-    repositoryFullName: incident.repository_full_name,
-    excludeRunId: run.is_demo ? undefined : run.id,
-  });
+  const [memory, tavily] = await Promise.all([
+    recallRepositoryEpisodicMemory({
+      supabase,
+      repositoryFullName: incident.repository_full_name,
+      excludeRunId: run.is_demo ? undefined : run.id,
+    }),
+    searchIncidentIntelligenceWithTavily({
+      incidentTitle: incident.title,
+      errorText: incident.error_text_redacted,
+      customQuery:
+        parsed.data.workflow === 'custom' && parsed.data.customQuestion
+          ? `${incident.title}: ${parsed.data.customQuestion}`
+          : undefined,
+    }),
+  ]);
 
   const diag = run.diagnosis_json as { rootCause?: string } | null;
 
@@ -139,20 +163,21 @@ export async function POST(
         ? `Exit ${candidateTest.exit_code} (${candidateTest.failed ?? 0} failed, ${candidateTest.passed ?? 0} passed in ${candidateTest.duration_ms}ms)`
         : 'Candidate pending',
       episodicMemoryBlock: memory.nemotronContextBlock,
+      tavilyGroundingBlock: tavily.nemotronGroundingBlock,
     });
 
-    // If this is an authenticated owner run, persist the Co-Pilot action in the run_events timeline
     if (!run.is_demo && user && run.user_id === user.id) {
       await supabase.rpc('append_run_event', {
         p_run_id: run.id,
         p_stage: run.current_stage,
         p_event_type: 'copilot_action_executed',
-        p_summary: `Nemotron Co-Pilot executed "${parsed.data.workflow}": ${result.data.title} (${result.latencyMs}ms)`,
+        p_summary: `Nemotron Co-Pilot + Tavily Grounding executed "${parsed.data.workflow}": ${result.data.title} (${result.latencyMs}ms)`,
         p_payload: {
           workflow: parsed.data.workflow,
           modelId: result.modelId,
           requestId: result.requestId,
           latencyMs: result.latencyMs,
+          tavilyCitationsCount: tavily.citations.length,
           memoryInvariantLearned: result.data.memoryInvariantLearned,
         },
       });
@@ -169,6 +194,7 @@ export async function POST(
         persistedToTimeline: Boolean(!run.is_demo && user && run.user_id === user.id),
       },
       memory,
+      tavily,
     });
   } catch (err) {
     return apiErrorResponse(

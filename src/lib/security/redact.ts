@@ -26,11 +26,15 @@ const SECRET_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
     replacement: '[REDACTED_RESEND_KEY]',
   },
   {
+    pattern: /\b(tvly-[A-Za-z0-9_-]{16,})\b/g,
+    replacement: '[REDACTED_TAVILY_KEY]',
+  },
+  {
     pattern: /(Authorization\s*:\s*(?:Bearer|Basic)\s+)[^\s"']+/gi,
     replacement: '$1[REDACTED_AUTH_HEADER]',
   },
   {
-    pattern: /((?:NEBIUS_API_KEY|GITHUB_TOKEN|SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|VERCEL_TOKEN)\s*=\s*)[^\s"']+/gi,
+    pattern: /((?:NEBIUS_API_KEY|GITHUB_TOKEN|SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|TAVILY_API_KEY|VERCEL_TOKEN)\s*=\s*)[^\s"']+/gi,
     replacement: '$1[REDACTED_ENV_SECRET]',
   },
 ];

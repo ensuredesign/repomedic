@@ -4,6 +4,7 @@ import {
   diagnoseIncidentWithNemotron,
   generatePatchWithNemotron,
 } from '@/lib/ai/nebius';
+import { searchIncidentIntelligenceWithTavily } from '@/lib/ai/tavily';
 import {
   applyStructuredEdits,
   evaluateTestOutcome,
@@ -212,22 +213,29 @@ export async function advanceRunStage(params: {
           baseSha: incident.base_sha,
         });
 
-        const memorySnapshot = await recallRepositoryEpisodicMemory({
-          supabase,
-          repositoryFullName: incident.repository_full_name,
-          excludeRunId: runId,
-        });
+        const [memorySnapshot, tavilyResult] = await Promise.all([
+          recallRepositoryEpisodicMemory({
+            supabase,
+            repositoryFullName: incident.repository_full_name,
+            excludeRunId: runId,
+          }),
+          searchIncidentIntelligenceWithTavily({
+            incidentTitle: incident.title,
+            errorText: incident.error_text_redacted,
+          }),
+        ]);
 
         await supabase.rpc('append_run_event', {
           p_run_id: runId,
           p_stage: 'investigating',
           p_event_type: 'memory_recalled',
-          p_summary: `Recalled persistent episodic memory for ${incident.repository_full_name}: ${memorySnapshot.verifiedFixesCount} prior verified fixes, hotspot ${memorySnapshot.knownHotspotPaths[0]?.path ?? 'src/pricing.ts'}, and ${memorySnapshot.learnedInvariants.length} repository invariants injected into Nemotron context.`,
+          p_summary: `Recalled persistent episodic memory (${memorySnapshot.verifiedFixesCount} verified fixes) + Tavily live web grounding (${tavilyResult.citations.length} specification citations in ${tavilyResult.responseTimeMs}ms).`,
           p_payload: {
             totalPriorRuns: memorySnapshot.totalPriorRuns,
             verifiedFixesCount: memorySnapshot.verifiedFixesCount,
             knownHotspotPaths: memorySnapshot.knownHotspotPaths,
-            learnedInvariantsCount: memorySnapshot.learnedInvariants.length,
+            tavilyCitationsCount: tavilyResult.citations.length,
+            tavilyResponseTimeMs: tavilyResult.responseTimeMs,
           },
         });
 
@@ -241,6 +249,11 @@ export async function advanceRunStage(params: {
 
         const baseline = (baselineRows as TestResultRow[] | null)?.[0];
 
+        const combinedGroundingBlock = [
+          memorySnapshot.nemotronContextBlock,
+          ...(tavilyResult.nemotronGroundingBlock ? [tavilyResult.nemotronGroundingBlock] : []),
+        ].join('\n\n');
+
         const aiResult = await diagnoseIncidentWithNemotron({
           repositoryFullName: incident.repository_full_name,
           baseSha: slice.pinnedSha,
@@ -248,7 +261,7 @@ export async function advanceRunStage(params: {
           baselineStdout: baseline?.stdout_excerpt ?? '',
           baselineStderr: baseline?.stderr_excerpt ?? '',
           sourceFiles: slice.files,
-          episodicMemoryBlock: memorySnapshot.nemotronContextBlock,
+          episodicMemoryBlock: combinedGroundingBlock,
         });
 
         await supabase.rpc('append_run_event', {

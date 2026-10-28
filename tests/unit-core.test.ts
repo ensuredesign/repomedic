@@ -19,6 +19,7 @@ import {
   evaluateTestOutcome,
 } from '@/lib/agent/patch-applier';
 import { getResendConfig } from '@/lib/email/resend';
+import { buildIncidentTavilyQuery, TAVILY_MCP_SERVER_URL } from '@/lib/ai/tavily';
 import { analyzePatchSecurityAndBlastRadius } from '@/lib/security/patch-scanner';
 
 describe('RepoMedic Core Deterministic Unit Tests', () => {
@@ -202,5 +203,18 @@ Let me inspect src/pricing.ts line 45.
     expect(parsed.title).toContain('SRE Post-Mortem');
     expect(parsed.actionItems.length).toBe(2);
     expect(parsed.memoryInvariantLearned).toContain('nullish coalescing');
+  });
+
+  it('11. redacts Tavily API keys and builds specification-grounded Tavily search queries', () => {
+    const rawWithTavily = 'Leaked key tvly-dev-1234567890abcdefghijklmnop in logs';
+    const redacted = redactSecrets(rawWithTavily);
+    expect(redacted).not.toContain('tvly-dev-1234567890');
+    expect(redacted).toContain('[REDACTED_TAVILY_KEY]');
+
+    const q = buildIncidentTavilyQuery({
+      incidentTitle: 'B2B tax-exempt orders (0% taxRatePercent) charged default tax',
+    });
+    expect(q).toContain('nullish coalescing');
+    expect(TAVILY_MCP_SERVER_URL).toBe('https://mcp.tavily.com/mcp/');
   });
 });

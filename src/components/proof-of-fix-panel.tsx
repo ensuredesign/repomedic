@@ -51,6 +51,21 @@ interface MemorySummary {
   learnedInvariants: string[];
 }
 
+interface TavilySummary {
+  configured: boolean;
+  liveVerified: boolean;
+  query: string;
+  answer: string | null;
+  responseTimeMs: number;
+  mcpServerUrl: string;
+  citations: Array<{
+    title: string;
+    url: string;
+    snippet: string;
+    score: number;
+  }>;
+}
+
 interface ProofOfFixPanelProps {
   bundle: CompleteRunBundle;
   isRecordedDemo?: boolean;
@@ -72,9 +87,15 @@ export function ProofOfFixPanel({
     message: string;
   } | null>(null);
   const [memorySummary, setMemorySummary] = useState<MemorySummary | null>(null);
+  const [tavilySummary, setTavilySummary] = useState<TavilySummary | null>(null);
   const [copilotLoading, setCopilotLoading] = useState(false);
   const [activeWorkflow, setActiveWorkflow] = useState<
-    'sre_postmortem' | 'iteration_audit' | 'canary_runbook' | 'custom' | null
+    | 'sre_postmortem'
+    | 'iteration_audit'
+    | 'canary_runbook'
+    | 'tavily_web_research'
+    | 'custom'
+    | null
   >(null);
   const [customQuestion, setCustomQuestion] = useState('');
   const [copilotOutput, setCopilotOutput] = useState<CopilotSynthesis | null>(null);
@@ -89,6 +110,9 @@ export function ProofOfFixPanel({
         if (active && data?.memory) {
           setMemorySummary(data.memory);
         }
+        if (active && data?.tavily) {
+          setTavilySummary(data.tavily);
+        }
       })
       .catch(() => {
         // Ignore background memory recall error
@@ -99,7 +123,12 @@ export function ProofOfFixPanel({
   }, [run.id]);
 
   async function runCopilotWorkflow(
-    workflow: 'sre_postmortem' | 'iteration_audit' | 'canary_runbook' | 'custom',
+    workflow:
+      | 'sre_postmortem'
+      | 'iteration_audit'
+      | 'canary_runbook'
+      | 'tavily_web_research'
+      | 'custom',
   ) {
     if (copilotLoading) return;
     setCopilotLoading(true);
@@ -122,6 +151,9 @@ export function ProofOfFixPanel({
       setCopilotTelemetry(data.telemetry);
       if (data.memory) {
         setMemorySummary(data.memory);
+      }
+      if (data.tavily) {
+        setTavilySummary(data.tavily);
       }
     } catch (err) {
       setCopilotError(err instanceof Error ? err.message : 'Failed to execute Co-Pilot action.');
@@ -783,6 +815,45 @@ export function ProofOfFixPanel({
           </div>
         )}
 
+        {/* Tavily Live Web & Specification Grounding Card */}
+        {tavilySummary && tavilySummary.citations.length > 0 && (
+          <div className="rounded-[10px] border border-[#E8E8EC] bg-[#FFFFFF] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#E8E8EC]">
+              <div className="flex items-center gap-2 font-mono text-[12px] font-semibold text-[#0A0A0A]">
+                <Sparkles className="h-3.5 w-3.5 text-[#047857]" aria-hidden="true" />
+                <span>TAVILY LIVE WEB &amp; SPECIFICATION GROUNDING</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
+                <span className="rounded-full bg-[#ECFDF5] border border-[#10B981]/30 px-2.5 py-0.5 text-[#047857] font-semibold">
+                  {tavilySummary.citations.length} Live Citations ({tavilySummary.responseTimeMs}ms)
+                </span>
+                <span className="rounded-full bg-[#FAFAFA] border border-[#E8E8EC] px-2.5 py-0.5 text-[#52525B]">
+                  MCP: {tavilySummary.mcpServerUrl}
+                </span>
+              </div>
+            </div>
+            <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {tavilySummary.citations.map((cit, idx) => (
+                <a
+                  key={idx}
+                  href={cit.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-2.5 text-[12px] hover:border-[#6366F1] transition-colors block"
+                >
+                  <div className="flex items-center justify-between gap-1 font-medium text-[#4F46E5]">
+                    <span className="truncate">{cit.title}</span>
+                    <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  </div>
+                  <p className="mt-1 text-[11px] text-[#52525B] line-clamp-2 leading-snug">
+                    {cit.snippet}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 1-Click Multi-Step Co-Pilot Workflows */}
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -825,6 +896,20 @@ export function ProofOfFixPanel({
           >
             <ShieldCheck className="h-3.5 w-3.5 text-[#B45309] shrink-0" aria-hidden="true" />
             <span>3. Generate Canary &amp; Rollback Runbook</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={copilotLoading}
+            onClick={() => runCopilotWorkflow('tavily_web_research')}
+            className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-[8px] border px-3.5 py-2 text-[12px] font-medium transition-all disabled:opacity-50 ${
+              activeWorkflow === 'tavily_web_research' && copilotOutput
+                ? 'border-[#6366F1] bg-[#6366F1] text-[#FFFFFF]'
+                : 'border-[#E8E8EC] bg-[#FFFFFF] text-[#0A0A0A] hover:border-[#6366F1]'
+            }`}
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-[#4F46E5] shrink-0" aria-hidden="true" />
+            <span>4. Tavily Live Web &amp; Spec Grounding</span>
           </button>
         </div>
 

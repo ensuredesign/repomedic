@@ -502,7 +502,12 @@ export async function generatePatchWithNemotron(params: {
 }
 
 export async function runIncidentCopilotWithNemotron(params: {
-  workflow: 'sre_postmortem' | 'iteration_audit' | 'canary_runbook' | 'custom';
+  workflow:
+    | 'sre_postmortem'
+    | 'iteration_audit'
+    | 'canary_runbook'
+    | 'tavily_web_research'
+    | 'custom';
   customQuestion?: string;
   repositoryFullName: string;
   baseSha: string;
@@ -513,6 +518,7 @@ export async function runIncidentCopilotWithNemotron(params: {
   baselineSummary: string;
   candidateSummary: string;
   episodicMemoryBlock: string;
+  tavilyGroundingBlock?: string;
 }): Promise<NebiusCallResult<CopilotActionOutput>> {
   const workflowDirective =
     params.workflow === 'sre_postmortem'
@@ -521,25 +527,28 @@ export async function runIncidentCopilotWithNemotron(params: {
         ? 'Perform a Test-and-Iterate Verification Audit: explain why the minimal surgical diff transitions the failing baseline assertion to exit code 0, and write a supplementary Vitest edge-case assertion in codeOrCommandSnippet.'
         : params.workflow === 'canary_runbook'
           ? 'Generate a Production Canary Rollout & Instant Rollback Runbook for the verified diff SHA-256, including git/CI verification commands in codeOrCommandSnippet.'
-          : `Answer the engineer's specific question using the full incident, diff, sandbox proof, and episodic memory context: "${params.customQuestion || 'Summarize the fix and safety guarantees.'}"`;
+          : params.workflow === 'tavily_web_research'
+            ? 'Synthesize a Cited Live Web & Specification Grounding Report combining the Tavily official documentation citations (MDN, TypeScript-ESLint, OWASP) with the repository root cause and verified patch.'
+            : `Answer the engineer's specific question using the full incident, diff, sandbox proof, Tavily web citations, and episodic memory context: "${params.customQuestion || 'Summarize the fix and safety guarantees.'}"`;
 
   return callNebiusStructured({
     systemPrompt: [
-      'You are the RepoMedic Context-Aware Engineering Co-Pilot powered by NVIDIA Nemotron on Nebius Token Factory.',
-      'You remember full episodic context across prior repository incidents, verified sandbox proofs, and learned invariants.',
+      'You are the RepoMedic Context-Aware Engineering Co-Pilot powered by NVIDIA Nemotron on Nebius Token Factory, grounded in Supabase Episodic Memory and Tavily Live Web Search.',
+      'You remember full episodic context across prior repository incidents, verified sandbox proofs, learned invariants, and real-time Tavily documentation citations.',
       'Respond ONLY with a single valid JSON object matching:',
       '{',
       '  "title": "concise action-oriented title",',
-      '  "executiveSummary": "2-4 sentences of deep technical synthesis grounded in the exact file, line, and test evidence",',
+      '  "executiveSummary": "2-4 sentences of deep technical synthesis grounded in the exact file, line, test evidence, and Tavily specification citations",',
       '  "memoryInvariantLearned": "1-sentence engineering invariant to persist in repository episodic memory",',
       '  "actionItems": ["concrete engineering step 1", "step 2", "step 3"],',
-      '  "codeOrCommandSnippet": "executable regression test assertion or CLI rollout/verification command"',
+      '  "codeOrCommandSnippet": "executable regression test assertion, ESLint rule config, or CLI rollout/verification command"',
       '}',
     ].join('\n'),
     userPrompt: [
       `Directive: ${workflowDirective}`,
       `Incident: ${params.incidentTitle} (${params.repositoryFullName} @ ${params.baseSha})`,
       params.episodicMemoryBlock,
+      ...(params.tavilyGroundingBlock ? [params.tavilyGroundingBlock] : []),
       `Diagnosed Root Cause: ${params.rootCause}`,
       `Sandbox Baseline -> Candidate Proof: ${params.baselineSummary} -> ${params.candidateSummary}`,
       `Verified Patch [sha256:${params.diffSha256.slice(0, 16)}]:\n${params.unifiedDiff}`,
