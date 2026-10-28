@@ -16,8 +16,10 @@ const UpdateProfileSchema = z.object({
 export async function GET() {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user ?? (await supabase.auth.getUser()).data.user;
 
   if (!user) {
     return apiErrorResponse(401, 'UNAUTHORIZED', 'Sign in required to view profile.');

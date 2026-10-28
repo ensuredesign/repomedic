@@ -37,32 +37,52 @@ const CreateIncidentSchema = z.object({
     }),
 });
 
+const userIncidentsCache = new Map<
+  string,
+  { expiresAt: number; payload: { incidents: unknown[]; allowedRepositories: string[] } }
+>();
+
 export async function GET() {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user ?? (await supabase.auth.getUser()).data.user;
 
   if (!user) {
     return apiErrorResponse(401, 'UNAUTHORIZED', 'Sign in required to list user incidents.');
   }
 
+  const cached = userIncidentsCache.get(user.id);
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json(cached.payload);
+  }
+
   const { data: incidents, error } = await supabase
     .from('incidents')
-    .select('*, runs(*)')
+    .select(
+      'id, user_id, repository_full_name, base_sha, title, error_text_redacted, affected_file_hint, is_demo, created_at, updated_at, runs(id, incident_id, status, attempt_count, model_id, input_tokens, output_tokens, last_error, started_at, completed_at, created_at, updated_at)',
+    )
     .eq('user_id', user.id)
     .eq('is_demo', false)
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(25);
 
   if (error) {
     return apiErrorResponse(500, 'DB_ERROR', error.message);
   }
 
-  return NextResponse.json({
+  const payload = {
     incidents: incidents ?? [],
     allowedRepositories: getAllowedRepositories(),
+  };
+  userIncidentsCache.set(user.id, {
+    expiresAt: Date.now() + 15_000,
+    payload,
   });
+
+  return NextResponse.json(payload);
 }
 
 export async function POST(request: Request) {
@@ -122,5 +142,6 @@ export async function POST(request: Request) {
     return apiErrorResponse(500, 'DB_INSERT_ERROR', error?.message || 'Failed to create incident.');
   }
 
+  userIncidentsCache.delete(user.id);
   return NextResponse.json({ incident }, { status: 201 });
 }

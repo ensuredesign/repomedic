@@ -13,8 +13,10 @@ const UpdateUserRoleSchema = z.object({
 export async function GET() {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user ?? (await supabase.auth.getUser()).data.user;
 
   if (!user) {
     return apiErrorResponse(401, 'UNAUTHORIZED', 'Sign in required to access Admin Panel.');
@@ -22,14 +24,24 @@ export async function GET() {
 
   const [callerProfileRes, profilesRes, incidentsRes, runsRes, prsRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
-    supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100),
-    supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(100),
-    supabase.from('runs').select('*').order('created_at', { ascending: false }).limit(100),
+    supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(50),
+    supabase
+      .from('incidents')
+      .select('id, user_id, repository_full_name, base_sha, title, is_demo, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50),
+    supabase
+      .from('runs')
+      .select(
+        'id, incident_id, user_id, status, attempt_count, model_id, input_tokens, output_tokens, estimated_cost_usd, created_at',
+      )
+      .order('created_at', { ascending: false })
+      .limit(50),
     supabase
       .from('pull_requests')
-      .select('*')
+      .select('id, run_id, user_id, pr_number, pr_url, head_branch, base_branch, draft, created_at')
       .order('created_at', { ascending: false })
-      .limit(100),
+      .limit(50),
   ]);
 
   const callerProfile = callerProfileRes.data;
