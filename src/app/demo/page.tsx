@@ -35,7 +35,7 @@ export default function DemoCaseStudyPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/demo', { cache: 'no-store' });
+      const res = await fetch('/api/demo');
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data?.error?.message || 'Failed to load demo case study');
