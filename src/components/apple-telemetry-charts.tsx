@@ -63,7 +63,7 @@ export function RadialRingGauge({
         </div>
       </div>
       <div className="min-w-0">
-        <div className="text-[13px] font-semibold tracking-[-0.01em] text-[#1D1D1F] truncate">
+        <div className="text-[13px] font-semibold tracking-[-0.01em] text-[#1D1D1F] leading-tight">
           {label}
         </div>
         {sublabel && (
@@ -326,7 +326,10 @@ export function AppleBentoHeroShowcase() {
         </div>
 
         <div>
-          <h3 className="text-[20px] font-bold tracking-[-0.025em] text-[#FFFFFF]">
+          <h3
+            className="text-[20px] font-bold tracking-[-0.025em]"
+            style={{ color: '#FFFFFF' }}
+          >
             Multi-Agent Neural Repair Engine
           </h3>
           <p className="mt-1.5 text-[13px] text-[#A1A1A6] leading-relaxed">
