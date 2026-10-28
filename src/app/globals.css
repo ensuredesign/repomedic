@@ -1,29 +1,120 @@
 @import "tailwindcss";
 
 :root {
-  --bg-graphite: #0b1017;
-  --bg-surface: #111923;
-  --bg-elevated: #182331;
-  --text-primary: #f2f7fb;
-  --text-muted: #9eb0c1;
-  --accent-cyan: #28c8db;
-  --accent-teal: #21bd9d;
-  --status-amber: #f59e0b;
-  --status-coral: #f43f5e;
-  --border-subtle: rgba(158, 176, 193, 0.16);
+  /* Genesis Design System (https://designmd.ai/chef/genesis) */
+  --genesis-primary: #6366f1;
+  --genesis-primary-hover: #4f46e5;
+  --genesis-secondary: #20970b;
+  --genesis-neutral: #9c9c9c;
+  --genesis-bg: #fafafa;
+  --genesis-surface: #ffffff;
+  --genesis-text-primary: #0a0a0a;
+  --genesis-text-secondary: #6b6b6b;
+  --genesis-border: #e8e8ec;
+  --genesis-success: #10b981;
+  --genesis-warning: #f59e0b;
+  --genesis-error: #ef4444;
 }
 
 html,
 body {
-  background-color: var(--bg-graphite);
-  color: var(--text-primary);
+  background-color: var(--genesis-bg);
+  color: var(--genesis-text-primary);
+  font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
 }
 
+h1,
+h2,
+h3,
+.font-display {
+  font-family: "General Sans", var(--font-dm-sans), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--genesis-text-primary);
+}
+
+code,
+pre,
+.font-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Genesis Interactive Dot Grid (the only allowed decorative background element) */
+.genesis-dot-grid {
+  background-image: radial-gradient(#e8e8ec 1.25px, transparent 1.25px);
+  background-size: 20px 20px;
+}
+
+/* Genesis Card Elevation: flat at rest with 1px #E8E8EC border, 12px radius, hover lift + shadow */
+.genesis-card {
+  background-color: var(--genesis-surface);
+  border: 1px solid var(--genesis-border);
+  border-radius: 12px;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.genesis-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Genesis Primary Button: #6366F1 fill, 6px radius, -1px shift + tinted glow shadow on hover */
+.genesis-btn-primary {
+  background-color: var(--genesis-primary);
+  color: var(--genesis-surface);
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+
+.genesis-btn-primary:hover:not(:disabled) {
+  background-color: var(--genesis-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+/* Genesis Secondary Button: transparent/surface bg, 1px #E8E8EC border, 6px radius, -1px hover shift */
+.genesis-btn-secondary {
+  background-color: var(--genesis-surface);
+  color: var(--genesis-text-primary);
+  border: 1px solid var(--genesis-border);
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+
+.genesis-btn-secondary:hover:not(:disabled) {
+  background-color: var(--genesis-bg);
+  transform: translateY(-1px);
+}
+
+/* Genesis Input: 1px #E8E8EC border, #FFFFFF surface, 6px radius, 10px x 14px padding, 14px font, 3px indigo focus ring */
+.genesis-input {
+  background-color: var(--genesis-surface);
+  color: var(--genesis-text-primary);
+  border: 1px solid var(--genesis-border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.genesis-input::placeholder {
+  color: var(--genesis-neutral);
+}
+
+.genesis-input:focus {
+  outline: none;
+  border-color: var(--genesis-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
 *:focus-visible {
-  outline: 2px solid var(--accent-cyan);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {

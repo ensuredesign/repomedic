@@ -54,35 +54,35 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B1017] text-[#F2F7FB]">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#0A0A0A]">
       <NavHeader />
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-12">
-        <div className="rounded-2xl border border-[#9EB0C1]/20 bg-[#111923] p-6 sm:p-8 shadow-xl">
-          <div className="flex items-center gap-2.5 text-[#28C8DB] font-mono text-xs font-semibold uppercase tracking-wider">
-            <Lock className="h-4 w-4" aria-hidden="true" />
+        <div className="genesis-card p-6 sm:p-8">
+          <div className="flex items-center gap-2 text-[#6366F1] font-mono text-[11px] font-medium uppercase tracking-wider">
+            <Lock className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Supabase Auth · RLS Protected</span>
           </div>
 
-          <h1 className="mt-2 text-2xl font-bold text-[#F2F7FB]">
+          <h1 className="mt-2 text-[24px] font-bold text-[#0A0A0A] font-display">
             {mode === 'signin' ? 'Sign in to RepoMedic' : 'Create Judge / Developer Account'}
           </h1>
-          <p className="mt-1 text-xs text-[#9EB0C1]">
+          <p className="mt-1 text-[13px] text-[#6B6B6B]">
             All incidents, runs, test logs, and PR approvals are isolated per user via PostgreSQL
             Row-Level Security.
           </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 rounded-lg bg-[#0B1017] p-1 border border-[#9EB0C1]/15">
+          <div className="mt-5 grid grid-cols-2 gap-2 rounded-[6px] bg-[#FAFAFA] p-1 border border-[#E8E8EC]">
             <button
               type="button"
               onClick={() => {
                 setMode('signin');
                 setError(null);
               }}
-              className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-[4px] py-1.5 text-[13px] font-medium transition-colors ${
                 mode === 'signin'
-                  ? 'bg-[#182331] text-[#28C8DB]'
-                  : 'text-[#9EB0C1] hover:text-[#F2F7FB]'
+                  ? 'bg-[#FFFFFF] text-[#0A0A0A] border border-[#E8E8EC]'
+                  : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
               }`}
             >
               Sign In
@@ -93,10 +93,10 @@ export default function AuthPage() {
                 setMode('signup');
                 setError(null);
               }}
-              className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-[4px] py-1.5 text-[13px] font-medium transition-colors ${
                 mode === 'signup'
-                  ? 'bg-[#182331] text-[#28C8DB]'
-                  : 'text-[#9EB0C1] hover:text-[#F2F7FB]'
+                  ? 'bg-[#FFFFFF] text-[#0A0A0A] border border-[#E8E8EC]'
+                  : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
               }`}
             >
               Create Account
@@ -105,7 +105,7 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             <div>
-              <label htmlFor="auth-email" className="block text-xs font-medium text-[#F2F7FB]">
+              <label htmlFor="auth-email" className="block text-[13px] font-medium text-[#0A0A0A]">
                 Email Address
               </label>
               <input
@@ -116,12 +116,12 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="judge@repomedic.dev"
-                className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-3.5 py-2 text-sm text-[#F2F7FB] placeholder:text-[#9EB0C1]/40 focus:border-[#28C8DB]"
+                className="genesis-input mt-1.5 w-full"
               />
             </div>
 
             <div>
-              <label htmlFor="auth-password" className="block text-xs font-medium text-[#F2F7FB]">
+              <label htmlFor="auth-password" className="block text-[13px] font-medium text-[#0A0A0A]">
                 Password (min 6 characters)
               </label>
               <input
@@ -133,14 +133,14 @@ export default function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-3.5 py-2 text-sm text-[#F2F7FB] placeholder:text-[#9EB0C1]/40 focus:border-[#28C8DB]"
+                className="genesis-input mt-1.5 w-full"
               />
             </div>
 
             {error && (
               <div
                 role="alert"
-                className="flex items-start gap-2 rounded-lg border border-[#F43F5E]/40 bg-[#F43F5E]/10 p-3 text-xs text-[#F43F5E]"
+                className="flex items-start gap-2 rounded-[6px] border border-[#EF4444]/40 bg-[#EF4444]/10 p-3 text-[13px] text-[#EF4444]"
               >
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{error}</span>
@@ -150,7 +150,7 @@ export default function AuthPage() {
             {infoMessage && (
               <div
                 role="status"
-                className="flex items-start gap-2 rounded-lg border border-[#21BD9D]/40 bg-[#21BD9D]/10 p-3 text-xs text-[#21BD9D]"
+                className="flex items-start gap-2 rounded-[6px] border border-[#10B981]/40 bg-[#10B981]/10 p-3 text-[13px] text-[#10B981]"
               >
                 <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{infoMessage}</span>
@@ -160,7 +160,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#28C8DB] px-4 py-2.5 text-sm font-semibold text-[#0B1017] hover:bg-[#21BD9D] disabled:opacity-50 transition-colors"
+              className="genesis-btn-primary w-full inline-flex h-[44px] items-center justify-center gap-2 px-4 text-[14px] disabled:opacity-50"
             >
               {mode === 'signin' ? (
                 <>

@@ -109,16 +109,16 @@ export default function NewIncidentPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B1017] text-[#F2F7FB]">
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#0A0A0A]">
       <NavHeader />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#9EB0C1]/15 pb-5">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E8E8EC] pb-5">
           <div>
-            <h1 className="text-2xl font-bold text-[#F2F7FB]">
+            <h1 className="text-[28px] sm:text-[32px] font-bold text-[#0A0A0A] font-display">
               Start Autonomous Incident Investigation
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-[#9EB0C1]">
+            <p className="mt-1 text-[14px] text-[#6B6B6B]">
               Supply an allowlisted repository and failing stack trace. RepoMedic will reproduce the
               failure in Vercel Sandbox, query NVIDIA Nemotron on Nebius Token Factory, and verify a
               candidate patch.
@@ -127,20 +127,20 @@ export default function NewIncidentPage() {
           <button
             type="button"
             onClick={handlePrefillSample}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#28C8DB]/40 bg-[#182331] px-3 py-1.5 text-xs font-semibold text-[#28C8DB] hover:bg-[#28C8DB] hover:text-[#0B1017] transition-colors"
+            className="genesis-btn-secondary inline-flex h-[38px] items-center gap-1.5 px-3.5 text-[13px]"
           >
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            <Sparkles className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
             <span>Prefill Reproducible Fixture Bug</span>
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          <div className="rounded-xl border border-[#9EB0C1]/20 bg-[#111923] p-6 space-y-5">
+          <div className="genesis-card p-6 space-y-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor="repo-select"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#9EB0C1] font-mono"
+                  className="block text-[11px] font-medium uppercase tracking-wider text-[#6B6B6B] font-mono"
                 >
                   Allowlisted Target Repository
                 </label>
@@ -148,7 +148,7 @@ export default function NewIncidentPage() {
                   id="repo-select"
                   value={repositoryFullName}
                   onChange={(e) => setRepositoryFullName(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-3 py-2 font-mono text-xs text-[#F2F7FB]"
+                  className="genesis-input mt-1.5 w-full font-mono"
                 >
                   {allowedRepos.map((repo) => (
                     <option key={repo} value={repo}>
@@ -156,7 +156,7 @@ export default function NewIncidentPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-[#9EB0C1]">
+                <p className="mt-1 text-[12px] text-[#9C9C9C]">
                   Public demo blocks arbitrary repo cloning; only allowlisted fixtures are permitted.
                 </p>
               </div>
@@ -164,7 +164,7 @@ export default function NewIncidentPage() {
               <div>
                 <label
                   htmlFor="base-sha"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#9EB0C1] font-mono"
+                  className="block text-[11px] font-medium uppercase tracking-wider text-[#6B6B6B] font-mono"
                 >
                   Pinned Commit SHA
                 </label>
@@ -174,9 +174,9 @@ export default function NewIncidentPage() {
                   required
                   value={baseSha}
                   onChange={(e) => setBaseSha(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-3 py-2 font-mono text-xs text-[#F2F7FB]"
+                  className="genesis-input mt-1.5 w-full font-mono"
                 />
-                <p className="mt-1 text-[11px] text-[#9EB0C1]">
+                <p className="mt-1 text-[12px] text-[#9C9C9C]">
                   Both baseline and post-patch tests execute against this exact base revision.
                 </p>
               </div>
@@ -186,7 +186,7 @@ export default function NewIncidentPage() {
               <div className="sm:col-span-2">
                 <label
                   htmlFor="incident-title"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#9EB0C1] font-mono"
+                  className="block text-[11px] font-medium uppercase tracking-wider text-[#6B6B6B] font-mono"
                 >
                   Incident Summary Title
                 </label>
@@ -198,14 +198,14 @@ export default function NewIncidentPage() {
                   maxLength={240}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-3 py-2 text-sm text-[#F2F7FB]"
+                  className="genesis-input mt-1.5 w-full"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="file-hint"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#9EB0C1] font-mono"
+                  className="block text-[11px] font-medium uppercase tracking-wider text-[#6B6B6B] font-mono"
                 >
                   Optional File Hint
                 </label>
@@ -215,7 +215,7 @@ export default function NewIncidentPage() {
                   value={affectedFileHint}
                   onChange={(e) => setAffectedFileHint(e.target.value)}
                   placeholder="src/pricing.ts"
-                  className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-3 py-2 font-mono text-xs text-[#F2F7FB]"
+                  className="genesis-input mt-1.5 w-full font-mono"
                 />
               </div>
             </div>
@@ -224,11 +224,11 @@ export default function NewIncidentPage() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="error-trace"
-                  className="block text-xs font-semibold uppercase tracking-wider text-[#9EB0C1] font-mono"
+                  className="block text-[11px] font-medium uppercase tracking-wider text-[#6B6B6B] font-mono"
                 >
                   Stack Trace / Failing Test Output (≤ 12,000 chars)
                 </label>
-                <span className="font-mono text-[11px] text-[#9EB0C1]">
+                <span className="font-mono text-[11px] text-[#9C9C9C]">
                   {errorText.length} / 12000 chars
                 </span>
               </div>
@@ -240,15 +240,15 @@ export default function NewIncidentPage() {
                 maxLength={12000}
                 value={errorText}
                 onChange={(e) => setErrorText(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] p-3 font-mono text-xs text-[#F2F7FB] leading-relaxed"
+                className="genesis-input mt-1.5 w-full font-mono leading-relaxed"
               />
             </div>
 
             {/* Execution Scope & Budget Notice */}
-            <div className="rounded-lg border border-[#9EB0C1]/15 bg-[#0B1017] p-3.5 text-xs text-[#9EB0C1] flex items-start gap-2.5">
-              <ShieldCheck className="h-4 w-4 text-[#21BD9D] shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-4 text-[13px] text-[#6B6B6B] flex items-start gap-2.5">
+              <ShieldCheck className="h-4 w-4 text-[#10B981] shrink-0 mt-0.5" aria-hidden="true" />
               <div className="space-y-1">
-                <div className="font-semibold text-[#F2F7FB]">
+                <div className="font-medium text-[#0A0A0A]">
                   Enforced Execution Guardrails &amp; Run Limits
                 </div>
                 <p>
@@ -263,7 +263,7 @@ export default function NewIncidentPage() {
             {error && (
               <div
                 role="alert"
-                className="flex items-start gap-2 rounded-lg border border-[#F43F5E]/40 bg-[#F43F5E]/10 p-3.5 text-xs text-[#F43F5E]"
+                className="flex items-start gap-2 rounded-[6px] border border-[#EF4444]/40 bg-[#EF4444]/10 p-3.5 text-[13px] text-[#EF4444]"
               >
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                 <div className="flex-1">
@@ -273,7 +273,7 @@ export default function NewIncidentPage() {
                     <div className="mt-2">
                       <Link
                         href="/auth"
-                        className="underline font-semibold text-[#F2F7FB] hover:text-[#28C8DB]"
+                        className="underline font-medium text-[#0A0A0A] hover:text-[#6366F1]"
                       >
                         Go to Sign In / Create Account →
                       </Link>
@@ -286,14 +286,14 @@ export default function NewIncidentPage() {
             <div className="flex items-center justify-end gap-3 pt-2">
               <Link
                 href="/app"
-                className="rounded-lg border border-[#9EB0C1]/25 bg-[#0B1017] px-4 py-2.5 text-xs font-medium text-[#9EB0C1] hover:text-[#F2F7FB]"
+                className="genesis-btn-secondary inline-flex h-[38px] items-center px-4 text-[13px]"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#28C8DB] px-5 py-2.5 text-xs font-semibold text-[#0B1017] hover:bg-[#21BD9D] disabled:opacity-50 transition-colors"
+                className="genesis-btn-primary inline-flex h-[38px] items-center gap-2 px-5 text-[13px] disabled:opacity-50"
               >
                 {submitting ? (
                   <>

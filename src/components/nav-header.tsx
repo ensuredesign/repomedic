@@ -31,60 +31,58 @@ export function NavHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#9EB0C1]/15 bg-[#0B1017]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-40 border-b border-[#E8E8EC] bg-[#FFFFFF]/90 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-4 sm:px-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 text-[16px] font-bold tracking-[-0.03em] text-[#0A0A0A] hover:text-[#6366F1] transition-colors font-display"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-[#E8E8EC] bg-[#FAFAFA] text-[#6366F1]">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <span>RepoMedic</span>
+          <span className="hidden rounded-[4px] border border-[#E8E8EC] bg-[#FAFAFA] px-2 py-0.5 font-mono text-[11px] font-normal text-[#6B6B6B] sm:inline-block">
+            Diagnose. Patch. Prove.
+          </span>
+        </Link>
+
+        <nav aria-label="Main Navigation" className="hidden items-center gap-1 md:flex">
           <Link
-            href="/"
-            className="flex items-center gap-2.5 text-base font-semibold tracking-tight text-[#F2F7FB] hover:text-[#28C8DB] transition-colors"
+            href="/demo"
+            className={`rounded-[6px] px-3 py-1.5 text-[14px] font-medium transition-colors ${
+              pathname?.startsWith('/demo')
+                ? 'bg-[#6366F1] text-[#FFFFFF]'
+                : 'text-[#6B6B6B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+            }`}
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#28C8DB]/40 bg-[#111923] text-[#28C8DB]">
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span>RepoMedic</span>
-            <span className="hidden rounded border border-[#9EB0C1]/20 bg-[#111923] px-2 py-0.5 font-mono text-[11px] font-normal text-[#9EB0C1] sm:inline-block">
-              Diagnose. Patch. Prove.
-            </span>
+            Case Study &amp; Demo
           </Link>
-
-          <nav aria-label="Main Navigation" className="hidden items-center gap-1 md:flex">
-            <Link
-              href="/demo"
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                pathname?.startsWith('/demo')
-                  ? 'bg-[#182331] text-[#28C8DB]'
-                  : 'text-[#9EB0C1] hover:bg-[#111923] hover:text-[#F2F7FB]'
-              }`}
-            >
-              Case Study &amp; Demo
-            </Link>
-            <Link
-              href="/app"
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                pathname === '/app'
-                  ? 'bg-[#182331] text-[#28C8DB]'
-                  : 'text-[#9EB0C1] hover:bg-[#111923] hover:text-[#F2F7FB]'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/app/incidents/new"
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                pathname === '/app/incidents/new'
-                  ? 'bg-[#182331] text-[#28C8DB]'
-                  : 'text-[#9EB0C1] hover:bg-[#111923] hover:text-[#F2F7FB]'
-              }`}
-            >
-              New Incident
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-3">
+          <Link
+            href="/app"
+            className={`rounded-[6px] px-3 py-1.5 text-[14px] font-medium transition-colors ${
+              pathname === '/app'
+                ? 'bg-[#6366F1] text-[#FFFFFF]'
+                : 'text-[#6B6B6B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+            }`}
+          >
+            Dashboard
+          </Link>
           <Link
             href="/app/incidents/new"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#28C8DB] px-3.5 py-1.5 text-xs font-semibold text-[#0B1017] hover:bg-[#21BD9D] transition-colors"
+            className={`rounded-[6px] px-3 py-1.5 text-[14px] font-medium transition-colors ${
+              pathname === '/app/incidents/new'
+                ? 'bg-[#6366F1] text-[#FFFFFF]'
+                : 'text-[#6B6B6B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+            }`}
+          >
+            New Incident
+          </Link>
+        </nav>
+
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/app/incidents/new"
+            className="genesis-btn-primary inline-flex h-[32px] items-center gap-1.5 px-3 text-[13px]"
           >
             <PlusCircle className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Investigate Bug</span>
@@ -93,7 +91,7 @@ export function NavHeader() {
           {userEmail ? (
             <div className="flex items-center gap-2">
               <span
-                className="hidden max-w-[160px] truncate font-mono text-xs text-[#9EB0C1] sm:inline-block"
+                className="hidden max-w-[160px] truncate font-mono text-[12px] text-[#6B6B6B] sm:inline-block"
                 title={userEmail}
               >
                 {userEmail}
@@ -101,7 +99,7 @@ export function NavHeader() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#9EB0C1]/25 bg-[#111923] px-3 py-1.5 text-xs font-medium text-[#F2F7FB] hover:border-[#F43F5E]/50 hover:text-[#F43F5E] transition-colors"
+                className="genesis-btn-secondary inline-flex h-[32px] items-center gap-1.5 px-3 text-[13px] hover:border-[#EF4444] hover:text-[#EF4444]"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Sign Out</span>
@@ -110,7 +108,7 @@ export function NavHeader() {
           ) : (
             <Link
               href="/auth"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#9EB0C1]/25 bg-[#111923] px-3 py-1.5 text-xs font-medium text-[#F2F7FB] hover:border-[#28C8DB]/50 hover:text-[#28C8DB] transition-colors"
+              className="genesis-btn-secondary inline-flex h-[32px] items-center gap-1.5 px-3 text-[13px]"
             >
               <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Sign In</span>
@@ -120,11 +118,11 @@ export function NavHeader() {
       </div>
 
       {/* Mobile navigation strip */}
-      <div className="flex items-center justify-around border-t border-[#9EB0C1]/10 bg-[#111923]/60 px-2 py-2 md:hidden">
+      <div className="flex items-center justify-around border-t border-[#E8E8EC] bg-[#FAFAFA] px-2 py-2 md:hidden">
         <Link
           href="/demo"
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium ${
-            pathname?.startsWith('/demo') ? 'text-[#28C8DB]' : 'text-[#9EB0C1]'
+          className={`flex items-center gap-1.5 rounded-[6px] px-3 py-1 text-[13px] font-medium ${
+            pathname?.startsWith('/demo') ? 'text-[#6366F1]' : 'text-[#6B6B6B]'
           }`}
         >
           <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
@@ -132,8 +130,8 @@ export function NavHeader() {
         </Link>
         <Link
           href="/app"
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium ${
-            pathname === '/app' ? 'text-[#28C8DB]' : 'text-[#9EB0C1]'
+          className={`flex items-center gap-1.5 rounded-[6px] px-3 py-1 text-[13px] font-medium ${
+            pathname === '/app' ? 'text-[#6366F1]' : 'text-[#6B6B6B]'
           }`}
         >
           <Activity className="h-3.5 w-3.5" aria-hidden="true" />
@@ -141,8 +139,8 @@ export function NavHeader() {
         </Link>
         <Link
           href="/app/incidents/new"
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium ${
-            pathname === '/app/incidents/new' ? 'text-[#28C8DB]' : 'text-[#9EB0C1]'
+          className={`flex items-center gap-1.5 rounded-[6px] px-3 py-1 text-[13px] font-medium ${
+            pathname === '/app/incidents/new' ? 'text-[#6366F1]' : 'text-[#6B6B6B]'
           }`}
         >
           <PlusCircle className="h-3.5 w-3.5" aria-hidden="true" />
