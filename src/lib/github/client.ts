@@ -123,7 +123,7 @@ export async function fetchPinnedRepositorySlice(params: {
         pinnedSha:
           params.baseSha && params.baseSha.length >= 7
             ? params.baseSha
-            : 'a4f91c2b8e0d413792b6c7a0e51d984f3c21b001',
+            : '440255c3e1efe73a24d2cd92b90055c54c3e3549',
         source: 'local_fixture',
         files: localFiles,
       };

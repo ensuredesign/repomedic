@@ -53,9 +53,14 @@ export async function runTestsInVercelSandbox(params: {
 
   let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | null = null;
   try {
+    const token = process.env.VERCEL_TOKEN?.trim();
+    const teamId = process.env.VERCEL_TEAM_ID?.trim();
+    const projectId = process.env.VERCEL_PROJECT_ID?.trim();
+
     sandbox = await Sandbox.create({
       timeout: timeoutMs,
       runtime: 'node22',
+      ...(token && teamId && projectId ? { token, teamId, projectId } : {}),
     });
 
     const filesToWrite = params.files

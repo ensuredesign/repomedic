@@ -11,7 +11,36 @@ export function getSupabasePublicEnv() {
   return { url, anonKey };
 }
 
+export async function supabaseFetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const response = await fetch(input, init);
+      const contentType = response.headers.get('content-type') || '';
+      const isCloudflareOrGatewayError =
+        response.status >= 500 ||
+        (response.status >= 400 && contentType.includes('text/html'));
+
+      if (!isCloudflareOrGatewayError || attempt === 4) {
+        return response;
+      }
+    } catch (err) {
+      lastError = err;
+      if (attempt === 4) {
+        throw err;
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 750 * attempt));
+  }
+  throw lastError instanceof Error ? lastError : new Error('Supabase fetch failed after retries.');
+}
+
 export function createSupabaseBrowserClient() {
   const { url, anonKey } = getSupabasePublicEnv();
-  return createBrowserClient(url, anonKey);
+  return createBrowserClient(url, anonKey, {
+    global: { fetch: supabaseFetchWithRetry },
+  });
 }

@@ -75,7 +75,7 @@ export function isPatchableSourcePath(relativePath: string): boolean {
 }
 
 export function getAllowedRepositories(): string[] {
-  const raw = process.env.GITHUB_ALLOWED_REPOS || 'malinikochar/repomedic-fixture';
+  const raw = process.env.GITHUB_ALLOWED_REPOS || 'ensuredesign/repomedic-fixture';
   return raw
     .split(',')
     .map((r) => r.trim())

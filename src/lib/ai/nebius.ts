@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { redactSecrets } from '@/lib/security/redact';
+import { isPatchableSourcePath, redactSecrets } from '@/lib/security/redact';
 import {
   DiagnosisOutput,
   DiagnosisSchema,
@@ -135,28 +135,132 @@ export async function verifyNebiusModelCatalog(): Promise<NebiusCatalogCheck> {
   }
 }
 
-export function extractJsonObjectFromText(raw: string): unknown {
-  const cleaned = raw
-    .replace(/<think>[\s\S]*?<\/think>/gi, '')
-    .trim();
+export function repairLiteralControlCharsInJsonStrings(jsonCandidate: string): string {
+  let result = '';
+  let inString = false;
+  let escaped = false;
 
-  const fencedMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fencedMatch ? fencedMatch[1].trim() : cleaned;
+  for (let i = 0; i < jsonCandidate.length; i++) {
+    const ch = jsonCandidate[i];
+    if (escaped) {
+      result += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      result += ch;
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      result += ch;
+      continue;
+    }
+    if (inString) {
+      if (ch === '\n') {
+        result += '\\n';
+        continue;
+      }
+      if (ch === '\r') {
+        continue;
+      }
+      if (ch === '\t') {
+        result += '\\t';
+        continue;
+      }
+    }
+    result += ch;
+  }
+  return result;
+}
 
-  const firstBrace = candidate.indexOf('{');
-  const lastBrace = candidate.lastIndexOf('}');
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+function tryParseJsonCandidate(candidate: string): unknown | undefined {
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    try {
+      return JSON.parse(repairLiteralControlCharsInJsonStrings(candidate));
+    } catch {
+      return undefined;
+    }
+  }
+}
+
+export function extractJsonObjectFromText<T = unknown>(
+  raw: string,
+  schema?: z.ZodType<T, z.ZodTypeDef, unknown>,
+): T {
+  const cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  const parsedCandidates: unknown[] = [];
+
+  function checkCandidate(obj: unknown): T | undefined {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+    if (!schema) return obj as T;
+    const direct = schema.safeParse(obj);
+    if (direct.success) return direct.data;
+    // Also check if model wrapped the payload in a single top-level key (e.g. { patch: { ... } })
+    for (const val of Object.values(obj as Record<string, unknown>)) {
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        const nested = schema.safeParse(val);
+        if (nested.success) return nested.data;
+      }
+    }
+    parsedCandidates.push(obj);
+    return undefined;
+  }
+
+  // 0. Try parsing the entire cleaned string directly first
+  const directWhole = tryParseJsonCandidate(cleaned);
+  const directMatch = checkCandidate(directWhole);
+  if (directMatch !== undefined) return directMatch;
+
+  // 1. Check all markdown fenced code blocks (preferring the last one)
+  const fenceRegex = /```(?:json)?\s*([\s\S]*?)```/gi;
+  const fencedMatches = Array.from(cleaned.matchAll(fenceRegex));
+  for (let i = fencedMatches.length - 1; i >= 0; i--) {
+    const block = fencedMatches[i][1]?.trim();
+    if (!block) continue;
+    const parsed = tryParseJsonCandidate(block);
+    const matched = checkCandidate(parsed);
+    if (matched !== undefined) return matched;
+  }
+
+  // 2. Scan candidate { ... } slices from outermost to innermost
+  const openIndices: number[] = [];
+  const closeIndices: number[] = [];
+  for (let i = 0; i < cleaned.length; i++) {
+    if (cleaned[i] === '{') openIndices.push(i);
+    else if (cleaned[i] === '}') closeIndices.push(i);
+  }
+
+  if (openIndices.length === 0 || closeIndices.length === 0) {
     throw new Error('Model response did not contain a JSON object.');
   }
 
-  const jsonSlice = candidate.slice(firstBrace, lastBrace + 1);
-  return JSON.parse(jsonSlice);
+  for (let c = closeIndices.length - 1; c >= 0; c--) {
+    const endIdx = closeIndices[c];
+    for (let o = 0; o < openIndices.length; o++) {
+      const startIdx = openIndices[o];
+      if (startIdx >= endIdx) break;
+      const candidate = cleaned.slice(startIdx, endIdx + 1);
+      const parsed = tryParseJsonCandidate(candidate);
+      const matched = checkCandidate(parsed);
+      if (matched !== undefined) return matched;
+    }
+  }
+
+  if (schema && parsedCandidates.length > 0) {
+    return schema.parse(parsedCandidates[0]);
+  }
+
+  throw new Error('Failed to parse valid JSON object from model response.');
 }
 
 export async function callNebiusStructured<T>(params: {
   systemPrompt: string;
   userPrompt: string;
-  schema: z.ZodType<T>;
+  schema: z.ZodType<T, z.ZodTypeDef, unknown>;
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number;
@@ -169,71 +273,105 @@ export async function callNebiusStructured<T>(params: {
   const catalog = await verifyNebiusModelCatalog();
   const modelToUse = catalog.resolvedNvidiaModel || cfg.configuredModel;
 
-  const startedAt = Date.now();
-  const controller = new AbortController();
-  const timeoutMs = params.timeoutMs ?? 45000;
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let lastError: Error | null = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const startedAt = Date.now();
+    const controller = new AbortController();
+    const timeoutMs = params.timeoutMs ?? 60000;
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  try {
-    const response = await fetch(`${cfg.baseUrl}chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        model: modelToUse,
-        temperature: params.temperature ?? 0.1,
-        max_tokens: params.maxTokens ?? 1800,
-        messages: [
-          {
-            role: 'system',
-            content: params.systemPrompt,
-          },
-          {
-            role: 'user',
-            content: redactSecrets(params.userPrompt, 24000),
-          },
-        ],
-      }),
-      signal: controller.signal,
-      cache: 'no-store',
-    });
+    try {
+      const retryNote =
+        attempt > 1 && lastError
+          ? `\n\nIMPORTANT RETRY INSTRUCTION (Attempt #${attempt}): Your previous output failed schema validation (${redactSecrets(lastError.message, 300)}). Keep internal reasoning brief and output ONLY a single valid JSON object with the exact required keys.`
+          : '';
 
-    const latencyMs = Date.now() - startedAt;
-    const requestId =
-      response.headers.get('x-request-id') ||
-      response.headers.get('cf-ray') ||
-      null;
+      const response = await fetch(`${cfg.baseUrl}chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelToUse,
+          temperature: attempt === 1 ? (params.temperature ?? 0) : 0.1,
+          max_tokens: params.maxTokens ?? 6144,
+          messages: [
+            {
+              role: 'system',
+              content: params.systemPrompt,
+            },
+            {
+              role: 'user',
+              content: redactSecrets(params.userPrompt + retryNote, 24500),
+            },
+          ],
+        }),
+        signal: controller.signal,
+        cache: 'no-store',
+      });
 
-    if (!response.ok) {
-      const errorText = redactSecrets(await response.text(), 500);
-      throw new Error(`Nebius inference failed (HTTP ${response.status}): ${errorText}`);
+      const latencyMs = Date.now() - startedAt;
+      const requestId =
+        response.headers.get('x-request-id') ||
+        response.headers.get('cf-ray') ||
+        null;
+
+      if (!response.ok) {
+        const errorText = redactSecrets(await response.text(), 500);
+        throw new Error(`Nebius inference failed (HTTP ${response.status}): ${errorText}`);
+      }
+
+      const payload = (await response.json()) as {
+        id?: string;
+        model?: string;
+        choices?: Array<{ message?: { content?: string | null; reasoning_content?: string | null } }>;
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
+      };
+
+      const primaryContent = payload.choices?.[0]?.message?.content?.trim() || '';
+      const reasoningContent = payload.choices?.[0]?.message?.reasoning_content?.trim() || '';
+
+      let validated: T;
+      if (primaryContent.length > 2) {
+        try {
+          validated = extractJsonObjectFromText(primaryContent, params.schema);
+        } catch (primaryErr) {
+          if (reasoningContent.length > 2) {
+            validated = extractJsonObjectFromText(
+              `${reasoningContent}\n${primaryContent}`,
+              params.schema,
+            );
+          } else {
+            throw primaryErr;
+          }
+        }
+      } else if (reasoningContent.length > 2) {
+        validated = extractJsonObjectFromText(reasoningContent, params.schema);
+      } else {
+        throw new Error('Model returned empty content and empty reasoning_content.');
+      }
+
+      return {
+        data: validated,
+        modelId: payload.model || modelToUse,
+        requestId: payload.id || requestId,
+        inputTokens: payload.usage?.prompt_tokens ?? 0,
+        outputTokens: payload.usage?.completion_tokens ?? 0,
+        latencyMs,
+      };
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt === 3) {
+        throw lastError;
+      }
+    } finally {
+      clearTimeout(timer);
     }
-
-    const payload = (await response.json()) as {
-      id?: string;
-      model?: string;
-      choices?: Array<{ message?: { content?: string | null; reasoning_content?: string | null } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
-    };
-
-    const content = payload.choices?.[0]?.message?.content ?? '';
-    const parsedJson = extractJsonObjectFromText(content);
-    const validated = params.schema.parse(parsedJson);
-
-    return {
-      data: validated,
-      modelId: payload.model || modelToUse,
-      requestId: payload.id || requestId,
-      inputTokens: payload.usage?.prompt_tokens ?? 0,
-      outputTokens: payload.usage?.completion_tokens ?? 0,
-      latencyMs,
-    };
-  } finally {
-    clearTimeout(timer);
   }
+
+  throw lastError ?? new Error('Nebius inference failed.');
 }
 
 export async function runNebiusSmokeTest(): Promise<NebiusCallResult<HealthSmokeOutput>> {
@@ -284,10 +422,12 @@ export async function diagnoseIncidentWithNemotron(params: {
       `Baseline Test STDOUT:\n${params.baselineStdout}`,
       `Baseline Test STDERR:\n${params.baselineStderr}`,
       `Repository Source Files:\n${filesContext}`,
+      'Respond ONLY with a valid JSON object with exact top-level keys: "rootCause", "confidenceLabel", "evidencePaths", "repairPlan".',
     ].join('\n\n'),
     schema: DiagnosisSchema,
-    maxTokens: 1600,
-    temperature: 0.1,
+    maxTokens: 6144,
+    temperature: 0,
+    timeoutMs: 60000,
   });
 }
 
@@ -303,7 +443,9 @@ export async function generatePatchWithNemotron(params: {
     testStderr: string;
   };
 }): Promise<NebiusCallResult<PatchProposalOutput>> {
-  const filesContext = params.sourceFiles
+  const patchableFiles = params.sourceFiles.filter((f) => isPatchableSourcePath(f.path));
+  const filesToInclude = patchableFiles.length > 0 ? patchableFiles : params.sourceFiles;
+  const filesContext = filesToInclude
     .map((f) => `=== FILE: ${f.path} ===\n${f.content}`)
     .join('\n\n');
 
@@ -334,7 +476,7 @@ export async function generatePatchWithNemotron(params: {
       '  ],',
       '  "riskNotes": "impact and edge-case assessment"',
       '}',
-      'IMPORTANT: searchBlock MUST match the original file text verbatim (without line numbers). Do not modify test files unless explicitly required.',
+      'IMPORTANT: searchBlock MUST match the original file text verbatim (without line numbers). Keep searchBlock and replaceBlock minimal (prefer replacing only the single buggy line rather than the entire function). Do not modify test files unless explicitly required.',
     ].join('\n'),
     userPrompt: [
       `Repository: ${params.repositoryFullName} @ ${params.baseSha}`,
@@ -342,9 +484,11 @@ export async function generatePatchWithNemotron(params: {
       `Repair Plan: ${params.diagnosis.repairPlan}`,
       feedbackSection,
       `Original Source Files:\n${filesContext}`,
+      'Respond ONLY with a valid JSON object with exact top-level keys: "rationale", "touchedPaths", "edits", "riskNotes".',
     ].join('\n\n'),
     schema: PatchProposalSchema,
-    maxTokens: 1800,
-    temperature: 0.1,
+    maxTokens: 6144,
+    temperature: 0,
+    timeoutMs: 60000,
   });
 }

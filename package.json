@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run tests/unit-core.test.ts tests/m1-supabase-rls.test.ts tests/m1-live-nebius-and-sandbox.test.ts",
+    "test:closed-loop": "vitest run tests/m2-m4-live-closed-loop.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "fixture:test": "vitest run --config fixtures/buggy-order-service/vitest.config.ts"

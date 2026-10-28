@@ -28,9 +28,9 @@ AssertionError: expected 8.5 to be +0 // Object.is equality
 
 export default function NewIncidentPage() {
   const router = useRouter();
-  const [allowedRepos, setAllowedRepos] = useState<string[]>(['malinikochar/repomedic-fixture']);
-  const [repositoryFullName, setRepositoryFullName] = useState('malinikochar/repomedic-fixture');
-  const [baseSha, setBaseSha] = useState('a4f91c2b8e0d413792b6c7a0e51d984f3c21b001');
+  const [allowedRepos, setAllowedRepos] = useState<string[]>(['ensuredesign/repomedic-fixture']);
+  const [repositoryFullName, setRepositoryFullName] = useState('ensuredesign/repomedic-fixture');
+  const [baseSha, setBaseSha] = useState('440255c3e1efe73a24d2cd92b90055c54c3e3549');
   const [title, setTitle] = useState(SAMPLE_INCIDENT_TITLE);
   const [affectedFileHint, setAffectedFileHint] = useState('src/pricing.ts');
   const [errorText, setErrorText] = useState(SAMPLE_INCIDENT_TRACE);
@@ -56,7 +56,7 @@ export default function NewIncidentPage() {
     setTitle(SAMPLE_INCIDENT_TITLE);
     setAffectedFileHint('src/pricing.ts');
     setErrorText(SAMPLE_INCIDENT_TRACE);
-    setBaseSha('a4f91c2b8e0d413792b6c7a0e51d984f3c21b001');
+    setBaseSha('440255c3e1efe73a24d2cd92b90055c54c3e3549');
   }
 
   async function handleSubmit(e: React.FormEvent) {

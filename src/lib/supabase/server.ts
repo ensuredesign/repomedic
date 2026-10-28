@@ -1,13 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { getSupabasePublicEnv } from './client';
+import { getSupabasePublicEnv, supabaseFetchWithRetry } from './client';
 
 export async function createSupabaseServerClient() {
   const { url, anonKey } = getSupabasePublicEnv();
   const cookieStore = await cookies();
 
   return createServerClient(url, anonKey, {
+    global: { fetch: supabaseFetchWithRetry },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -34,6 +35,7 @@ export async function createSupabaseServerClient() {
 export function createSupabaseAnonServerClient() {
   const { url, anonKey } = getSupabasePublicEnv();
   return createClient(url, anonKey, {
+    global: { fetch: supabaseFetchWithRetry },
     auth: {
       persistSession: false,
       autoRefreshToken: false,

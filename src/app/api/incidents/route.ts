@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     process.env.GITHUB_FIXTURE_BASE_SHA &&
     process.env.GITHUB_FIXTURE_BASE_SHA !== 'REPLACE_WITH_KNOWN_FAILING_SHA'
       ? process.env.GITHUB_FIXTURE_BASE_SHA
-      : 'a4f91c2b8e0d413792b6c7a0e51d984f3c21b001';
+      : '440255c3e1efe73a24d2cd92b90055c54c3e3549';
 
   const redactedError = redactSecrets(parsed.data.errorText, 12000);
 

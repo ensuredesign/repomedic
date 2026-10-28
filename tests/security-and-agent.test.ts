@@ -53,7 +53,7 @@ describe('Security, Nebius Schema Validation, and Deterministic Patch Verificati
   });
 
   it('3. enforces repository allowlist and rejects arbitrary repositories', () => {
-    expect(isRepositoryAllowlisted('malinikochar/repomedic-fixture')).toBe(true);
+    expect(isRepositoryAllowlisted('ensuredesign/repomedic-fixture')).toBe(true);
     expect(isRepositoryAllowlisted('torvalds/linux')).toBe(false);
     expect(isRepositoryAllowlisted('evil/prompt-injection-repo')).toBe(false);
   });

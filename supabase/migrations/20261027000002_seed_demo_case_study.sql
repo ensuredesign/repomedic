@@ -52,9 +52,9 @@ begin
   values (
     v_incident_id,
     v_demo_user_id,
-    'malinikochar/repomedic-fixture',
+    'ensuredesign/repomedic-fixture',
     'fixture-buggy-order-service',
-    'a4f91c2b8e0d413792b6c7a0e51d984f3c21b001',
+    '440255c3e1efe73a24d2cd92b90055c54c3e3549',
     E'FAIL tests/pricing.test.ts > calculateOrderInvoice > 5. honors explicit 0% tax rate for tax-exempt B2B orders\nAssertionError: expected 8.5 to be 0 // Object.is equality\n  at tests/pricing.test.ts:62:36\n  Expected taxRatePercent: 0\n  Received taxRatePercent: 8.5 (taxCents: 1700 on $200.00 tax-exempt B2B order)',
     'B2B tax-exempt orders (0% taxRatePercent) erroneously charged 8.5% default tax',
     'src/pricing.ts',

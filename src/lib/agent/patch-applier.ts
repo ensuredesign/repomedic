@@ -38,13 +38,26 @@ export function applyStructuredEdits(
       throw new Error(`Target file not found in pinned repository slice: ${edit.path}`);
     }
 
-    const normalizedSearch = edit.searchBlock.replace(/\r\n/g, '\n');
-    const normalizedReplace = edit.replaceBlock.replace(/\r\n/g, '\n');
+    let normalizedSearch = edit.searchBlock.replace(/\r\n/g, '\n');
+    let normalizedReplace = edit.replaceBlock.replace(/\r\n/g, '\n');
 
     if (!currentContent.includes(normalizedSearch)) {
-      throw new Error(
-        `Search block did not match verbatim content in ${edit.path}. Refusing fuzzy edit.`,
-      );
+      const strippedSearch = normalizedSearch
+        .split('\n')
+        .map((l) => l.replace(/^\s*\d+:\s?/, ''))
+        .join('\n');
+      const strippedReplace = normalizedReplace
+        .split('\n')
+        .map((l) => l.replace(/^\s*\d+:\s?/, ''))
+        .join('\n');
+      if (currentContent.includes(strippedSearch)) {
+        normalizedSearch = strippedSearch;
+        normalizedReplace = strippedReplace;
+      } else {
+        throw new Error(
+          `Search block did not match verbatim content in ${edit.path}. Refusing fuzzy edit.`,
+        );
+      }
     }
 
     if (normalizedSearch === normalizedReplace) {

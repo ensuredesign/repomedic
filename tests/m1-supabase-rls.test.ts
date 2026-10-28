@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
+import { supabaseFetchWithRetry } from '@/lib/supabase/client';
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://repomedic-sb.propixer.in';
@@ -9,6 +10,7 @@ const SUPABASE_ANON_KEY =
 
 function makeAnonClient() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { fetch: supabaseFetchWithRetry },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
@@ -29,8 +31,8 @@ describe('Milestone 1 Gate — Live Supabase Auth, Schema, Atomic RPCs, and RLS 
 
     const { error: anonInsertErr } = await anon.from('incidents').insert({
       user_id: '00000000-0000-0000-0000-000000000001',
-      repository_full_name: 'malinikochar/repomedic-fixture',
-      base_sha: 'a4f91c2b8e0d413792b6c7a0e51d984f3c21b001',
+      repository_full_name: 'ensuredesign/repomedic-fixture',
+      base_sha: '440255c3e1efe73a24d2cd92b90055c54c3e3549',
       title: 'Unauthorized anon insert attempt',
       error_text_redacted: 'Error: should be rejected by RLS policy',
       is_demo: false,
@@ -90,8 +92,8 @@ describe('Milestone 1 Gate — Live Supabase Auth, Schema, Atomic RPCs, and RLS 
     // User A cannot forge is_demo = true
     const { error: forgeDemoErr } = await clientA.from('incidents').insert({
       user_id: userA.id,
-      repository_full_name: 'malinikochar/repomedic-fixture',
-      base_sha: 'a4f91c2b8e0d413792b6c7a0e51d984f3c21b001',
+      repository_full_name: 'ensuredesign/repomedic-fixture',
+      base_sha: '440255c3e1efe73a24d2cd92b90055c54c3e3549',
       title: 'Forged demo flag attempt',
       error_text_redacted: 'AssertionError: forged demo',
       is_demo: true,
