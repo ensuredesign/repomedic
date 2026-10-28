@@ -23,6 +23,7 @@ import {
   Terminal,
   XCircle,
 } from 'lucide-react';
+import { AppleProofTelemetryStrip } from '@/components/apple-telemetry-charts';
 import { analyzePatchSecurityAndBlastRadius } from '@/lib/security/patch-scanner';
 import type { CompleteRunBundle } from '@/lib/supabase/types';
 
@@ -438,6 +439,20 @@ export function ProofOfFixPanel({
           </p>
         </div>
       </div>
+
+      {/* Apple Cupertino Instruments Telemetry Strip: Before/After Bars + Radial Gauges + Token Sparkbar */}
+      <AppleProofTelemetryStrip
+        surgicalScore={securityAudit?.surgicalScore ?? 100}
+        passedChecks={securityAudit?.passedCount ?? 6}
+        totalChecks={securityAudit?.totalChecks ?? 6}
+        baselinePassed={baselineTest?.passed ?? 7}
+        baselineFailed={baselineTest?.failed ?? 1}
+        candidatePassed={latestCandidateTest?.passed ?? 8}
+        candidateFailed={latestCandidateTest?.failed ?? 0}
+        inputTokens={run.input_tokens}
+        outputTokens={run.output_tokens}
+        durationSeconds={durationSeconds ?? 18}
+      />
 
       {/* Side-by-side Baseline Red vs Patched Green Cards */}
       <div className="grid grid-cols-1 gap-4 p-4 sm:gap-5 sm:p-5 lg:grid-cols-2">

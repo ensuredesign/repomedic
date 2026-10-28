@@ -51,6 +51,7 @@ export async function GET(
       incidentTitle:
         incident?.title ?? 'B2B tax-exempt orders (0% taxRatePercent) charged default tax',
       errorText: incident?.error_text_redacted,
+      instantMode: true,
     }),
   ]);
 

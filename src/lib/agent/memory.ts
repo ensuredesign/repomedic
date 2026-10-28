@@ -31,12 +31,23 @@ const DEFAULT_LEARNED_INVARIANTS: Record<string, string[]> = {
   ],
 };
 
+const memoryCache = new Map<
+  string,
+  { timestamp: number; snapshot: RepositoryMemorySnapshot }
+>();
+const MEMORY_CACHE_TTL_MS = 60_000;
+
 export async function recallRepositoryEpisodicMemory(params: {
   supabase: SupabaseClient;
   repositoryFullName: string;
   excludeRunId?: string;
 }): Promise<RepositoryMemorySnapshot> {
   const { supabase, repositoryFullName, excludeRunId } = params;
+  const cacheKey = `${repositoryFullName}:${excludeRunId ?? 'all'}`;
+  const cached = memoryCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < MEMORY_CACHE_TTL_MS) {
+    return cached.snapshot;
+  }
 
   const { data: incidents } = await supabase
     .from('incidents')
@@ -66,23 +77,29 @@ export async function recallRepositoryEpisodicMemory(params: {
   const { data: runs } = await runsQuery;
   const runList = runs ?? [];
   const runIds = runList.map((r) => r.id);
+  const safeRunIds =
+    runIds.length > 0 ? runIds : ['00000000-0000-0000-0000-000000000000'];
 
-  const { data: patches } = await supabase
-    .from('patches')
-    .select('run_id, touched_paths, diff_sha256, attempt_number')
-    .in('run_id', runIds.length > 0 ? runIds : ['00000000-0000-0000-0000-000000000000'])
-    .order('attempt_number', { ascending: false });
+  const [patchesRes, prsRes] = await Promise.all([
+    supabase
+      .from('patches')
+      .select('run_id, touched_paths, diff_sha256, attempt_number')
+      .in('run_id', safeRunIds)
+      .order('attempt_number', { ascending: false }),
+    supabase
+      .from('pull_requests')
+      .select('run_id, github_pr_number, github_pr_url')
+      .in('run_id', safeRunIds),
+  ]);
 
-  const { data: prs } = await supabase
-    .from('pull_requests')
-    .select('run_id, github_pr_number, github_pr_url')
-    .in('run_id', runIds.length > 0 ? runIds : ['00000000-0000-0000-0000-000000000000']);
+  const patches = patchesRes.data ?? [];
+  const prs = prsRes.data ?? [];
 
   const patchByRun = new Map<
     string,
     { touched_paths: string[]; diff_sha256: string | null }
   >();
-  for (const p of patches ?? []) {
+  for (const p of patches) {
     if (!patchByRun.has(p.run_id)) {
       patchByRun.set(p.run_id, {
         touched_paths: Array.isArray(p.touched_paths) ? p.touched_paths : [],
@@ -92,7 +109,7 @@ export async function recallRepositoryEpisodicMemory(params: {
   }
 
   const prByRun = new Map<string, { number: number; url: string }>();
-  for (const pr of prs ?? []) {
+  for (const pr of prs) {
     prByRun.set(pr.run_id, {
       number: pr.github_pr_number,
       url: pr.github_pr_url,
@@ -166,7 +183,7 @@ export async function recallRepositoryEpisodicMemory(params: {
       : []),
   ].join('\n');
 
-  return {
+  const snapshot: RepositoryMemorySnapshot = {
     repositoryFullName,
     totalPriorRuns: Math.max(runList.length, 1),
     verifiedFixesCount: Math.max(verifiedFixesCount, 1),
@@ -175,4 +192,7 @@ export async function recallRepositoryEpisodicMemory(params: {
     recalledEpisodes: topEpisodes,
     nemotronContextBlock,
   };
+
+  memoryCache.set(cacheKey, { timestamp: Date.now(), snapshot });
+  return snapshot;
 }

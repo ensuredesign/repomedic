@@ -23,13 +23,20 @@ export async function GET() {
     return apiErrorResponse(401, 'UNAUTHORIZED', 'Sign in required to view profile.');
   }
 
-  const { data: existingProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [existingProfileRes, incidentsRes, runsRes, prsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    supabase.from('incidents').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    supabase
+      .from('runs')
+      .select('id, status, input_tokens, output_tokens, estimated_cost_usd')
+      .eq('user_id', user.id),
+    supabase
+      .from('pull_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id),
+  ]);
 
-  let profile = existingProfile as ProfileRow | null;
+  let profile = (existingProfileRes.data as ProfileRow | null) ?? null;
 
   if (!profile) {
     const defaultRole = user.email?.toLowerCase() === 'admin@repomedic.dev' ? 'admin' : 'developer';
@@ -53,19 +60,6 @@ export async function GET() {
       .single();
     profile = inserted as ProfileRow | null;
   }
-
-  // Fetch personal user telemetry
-  const [incidentsRes, runsRes, prsRes] = await Promise.all([
-    supabase.from('incidents').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-    supabase
-      .from('runs')
-      .select('id, status, input_tokens, output_tokens, estimated_cost_usd')
-      .eq('user_id', user.id),
-    supabase
-      .from('pull_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id),
-  ]);
 
   const userRuns = runsRes.data ?? [];
   const verifiedRunsCount = userRuns.filter(

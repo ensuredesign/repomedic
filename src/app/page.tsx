@@ -8,6 +8,7 @@ import {
   Lock,
   Terminal,
 } from 'lucide-react';
+import { AppleBentoHeroShowcase } from '@/components/apple-telemetry-charts';
 import { NavHeader } from '@/components/nav-header';
 import { RepoMedicLogo } from '@/components/repomedic-logo';
 
@@ -51,10 +52,13 @@ export default function LandingPage() {
                 href="/app/incidents/new"
                 className="genesis-btn-secondary inline-flex h-[44px] items-center gap-2 px-6 text-[14px]"
               >
-                <Terminal className="h-4 w-4 text-[#4F46E5]" aria-hidden="true" />
+                <Terminal className="h-4 w-4 text-[#0071E3]" aria-hidden="true" />
                 <span>Investigate Live Incident</span>
               </Link>
             </div>
+
+            {/* Apple Cupertino Silicon + Activity Ring + Pipeline Benchmark Showcase */}
+            <AppleBentoHeroShowcase />
 
             {/* Technology & Governance Strip */}
             <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

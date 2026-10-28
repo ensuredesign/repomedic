@@ -20,21 +20,8 @@ export async function GET() {
     return apiErrorResponse(401, 'UNAUTHORIZED', 'Sign in required to access Admin Panel.');
   }
 
-  const { data: callerProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (!callerProfile || callerProfile.role !== 'admin') {
-    return apiErrorResponse(
-      403,
-      'ADMIN_REQUIRED',
-      'Administrator role is required to view platform governance & telemetry.',
-    );
-  }
-
-  const [profilesRes, incidentsRes, runsRes, prsRes] = await Promise.all([
+  const [callerProfileRes, profilesRes, incidentsRes, runsRes, prsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
     supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100),
     supabase.from('incidents').select('*').order('created_at', { ascending: false }).limit(100),
     supabase.from('runs').select('*').order('created_at', { ascending: false }).limit(100),
@@ -44,6 +31,15 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(100),
   ]);
+
+  const callerProfile = callerProfileRes.data;
+  if (!callerProfile || callerProfile.role !== 'admin') {
+    return apiErrorResponse(
+      403,
+      'ADMIN_REQUIRED',
+      'Administrator role is required to view platform governance & telemetry.',
+    );
+  }
 
   const profiles = profilesRes.data ?? [];
   const incidents = incidentsRes.data ?? [];

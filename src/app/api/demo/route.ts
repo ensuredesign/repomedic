@@ -2,33 +2,46 @@ import { NextResponse } from 'next/server';
 import { createSupabaseAnonServerClient } from '@/lib/supabase/server';
 import { apiErrorResponse } from '@/lib/security/api-guard';
 
+let cachedDemoPayload: {
+  timestamp: number;
+  body: Record<string, unknown>;
+} | null = null;
+
+const DEMO_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export async function GET() {
+  if (cachedDemoPayload && Date.now() - cachedDemoPayload.timestamp < DEMO_CACHE_TTL_MS) {
+    return NextResponse.json(cachedDemoPayload.body, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
+  }
+
   const supabase = createSupabaseAnonServerClient();
 
-  const { data: incidents, error: incErr } = await supabase
-    .from('incidents')
-    .select('*')
-    .eq('is_demo', true)
-    .order('created_at', { ascending: false })
-    .limit(1);
+  const [incidentsRes, runsRes] = await Promise.all([
+    supabase
+      .from('incidents')
+      .select('*')
+      .eq('is_demo', true)
+      .order('created_at', { ascending: false })
+      .limit(1),
+    supabase
+      .from('runs')
+      .select('*')
+      .eq('is_demo', true)
+      .order('created_at', { ascending: false })
+      .limit(1),
+  ]);
 
-  if (incErr || !incidents || incidents.length === 0) {
+  const incident = incidentsRes.data?.[0];
+  const run = runsRes.data?.[0];
+
+  if (incidentsRes.error || !incident || runsRes.error || !run) {
     return apiErrorResponse(404, 'DEMO_NOT_FOUND', 'Recorded demo case study not found.');
   }
 
-  const incident = incidents[0];
-  const { data: runs, error: runErr } = await supabase
-    .from('runs')
-    .select('*')
-    .eq('incident_id', incident.id)
-    .eq('is_demo', true)
-    .limit(1);
-
-  if (runErr || !runs || runs.length === 0) {
-    return apiErrorResponse(404, 'DEMO_RUN_NOT_FOUND', 'Recorded demo run not found.');
-  }
-
-  const run = runs[0];
   const [eventsRes, patchesRes, testsRes] = await Promise.all([
     supabase
       .from('run_events')
@@ -50,7 +63,7 @@ export async function GET() {
       .order('created_at', { ascending: true }),
   ]);
 
-  return NextResponse.json({
+  const body = {
     provenance: 'recorded_case_study',
     disclaimer:
       'This is a curated read-only recorded case study persisted with is_demo=true for instant judge inspection. Sign in to run a live investigation.',
@@ -62,6 +75,17 @@ export async function GET() {
       testResults: testsRes.data ?? [],
       approvals: [],
       pullRequest: null,
+    },
+  };
+
+  cachedDemoPayload = {
+    timestamp: Date.now(),
+    body,
+  };
+
+  return NextResponse.json(body, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
     },
   });
 }

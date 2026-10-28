@@ -1,21 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  /* Genesis Design System (https://designmd.ai/chef/genesis) + UI/UX Pro Max WCAG AA Contrast */
-  --genesis-primary: #6366f1;
-  --genesis-primary-hover: #4f46e5;
-  --genesis-secondary: #20970b;
-  --genesis-neutral: #9c9c9c;
-  --genesis-bg: #fafafa;
+  /* Apple.com Cupertino Precision + Genesis Design System (WCAG AA/AAA Contrast) */
+  --genesis-primary: #0071e3;
+  --genesis-primary-hover: #0077ed;
+  --genesis-indigo: #5e5ce6;
+  --genesis-secondary: #1d8348;
+  --genesis-neutral: #86868b;
+  --genesis-bg: #f5f5f7;
   --genesis-surface: #ffffff;
-  --genesis-text-primary: #0a0a0a;
-  --genesis-text-secondary: #52525b;
-  --genesis-border: #e8e8ec;
-  --genesis-success: #10b981;
+  --genesis-dark: #1d1d1f;
+  --genesis-text-primary: #1d1d1f;
+  --genesis-text-secondary: #515154;
+  --genesis-border: rgba(0, 0, 0, 0.08);
+  --genesis-success: #28cd41;
   --genesis-success-text: #047857;
-  --genesis-warning: #f59e0b;
+  --genesis-warning: #ff9f0a;
   --genesis-warning-text: #b45309;
-  --genesis-error: #ef4444;
+  --genesis-error: #ff3b30;
   --genesis-error-text: #b91c1c;
 }
 
@@ -23,11 +25,12 @@ html,
 body {
   background-color: var(--genesis-bg);
   color: var(--genesis-text-primary);
-  font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-dm-sans), sans-serif;
   font-size: 15px;
   line-height: 1.5;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
@@ -35,16 +38,16 @@ h1,
 h2,
 h3,
 .font-display {
-  font-family: "General Sans", var(--font-dm-sans), sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "General Sans", var(--font-dm-sans), sans-serif;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.032em;
   color: var(--genesis-text-primary);
 }
 
 code,
 pre,
 .font-mono {
-  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+  font-family: "SF Mono", var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 button,
@@ -63,63 +66,112 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-/* Genesis Interactive Dot Grid (the only allowed decorative background element) */
-.genesis-dot-grid {
-  background-image: radial-gradient(#e8e8ec 1.25px, transparent 1.25px);
-  background-size: 20px 20px;
+/* Apple Frosted Translucent Navigation Surface */
+.apple-glass-nav {
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* Genesis Card Elevation: flat at rest with 1px #E8E8EC border, 12px radius, hover lift + shadow */
+/* Subtle architectural grid with radial vignette */
+.genesis-dot-grid {
+  background-color: #f5f5f7;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(0, 113, 227, 0.07), transparent 60%),
+    radial-gradient(circle at 85% 20%, rgba(94, 92, 230, 0.06), transparent 50%),
+    radial-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+}
+
+/* Apple Bento Card Elevation: 18px radius, optical hairline border, layered ambient shadow */
 .genesis-card {
   background-color: var(--genesis-surface);
-  border: 1px solid var(--genesis-border);
-  border-radius: 12px;
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  border: 1px solid rgba(0, 0, 0, 0.075);
+  border-radius: 18px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.035),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms ease;
 }
 
 .genesis-card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px) scale(1.003);
+  border-color: rgba(0, 113, 227, 0.22);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.075),
+    0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
-/* Genesis Primary Button: #6366F1 fill, 6px radius, -1px shift + tinted glow shadow on hover */
+/* Apple Dark Pro Bento Surface (MacBook Pro / Apple Silicon style) */
+.apple-dark-bento {
+  background: linear-gradient(145deg, #1d1d1f 0%, #0f0f12 100%);
+  color: #f5f5f7;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 16px 36px rgba(0, 0, 0, 0.14);
+}
+
+/* Apple Primary Button: #0071E3 pill/rounded fill with subtle specular lift */
 .genesis-btn-primary {
-  background-color: var(--genesis-primary);
-  color: var(--genesis-surface);
-  border-radius: 6px;
+  background: linear-gradient(180deg, #0077ed 0%, #0071e3 100%);
+  color: #ffffff;
+  border-radius: 980px;
   font-weight: 500;
+  letter-spacing: -0.01em;
   min-height: 38px;
-  transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 2px 8px rgba(0, 113, 227, 0.24);
+  transition:
+    background 200ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease;
 }
 
 .genesis-btn-primary:hover:not(:disabled) {
-  background-color: var(--genesis-primary-hover);
+  background: linear-gradient(180deg, #0080ff 0%, #0077ed 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 6px 18px rgba(0, 113, 227, 0.34);
 }
 
 .genesis-btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.99);
 }
 
-/* Genesis Secondary Button: transparent/surface bg, 1px #E8E8EC border, 6px radius, -1px hover shift */
+/* Apple Secondary Button: crisp white/translucent pill with subtle border */
 .genesis-btn-secondary {
-  background-color: var(--genesis-surface);
+  background-color: rgba(255, 255, 255, 0.9);
   color: var(--genesis-text-primary);
-  border: 1px solid var(--genesis-border);
-  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 980px;
   font-weight: 500;
+  letter-spacing: -0.01em;
   min-height: 38px;
-  transition: background-color 200ms ease, transform 200ms ease, border-color 200ms ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition:
+    background-color 200ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .genesis-btn-secondary:hover:not(:disabled) {
-  background-color: var(--genesis-bg);
+  background-color: #ffffff;
+  border-color: rgba(0, 113, 227, 0.35);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .genesis-btn-secondary:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.99);
 }
 
 @media (max-width: 639px) {
@@ -129,12 +181,12 @@ textarea:disabled {
   }
 }
 
-/* Genesis Input: 1px #E8E8EC border, #FFFFFF surface, 6px radius, 10px x 14px padding, 14px font, 3px indigo focus ring */
+/* Apple Input: 10px radius, crisp focus ring */
 .genesis-input {
   background-color: var(--genesis-surface);
   color: var(--genesis-text-primary);
-  border: 1px solid var(--genesis-border);
-  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
   padding: 10px 14px;
   min-height: 44px;
   font-size: 14px;
@@ -148,12 +200,27 @@ textarea:disabled {
 .genesis-input:focus {
   outline: none;
   border-color: var(--genesis-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.16);
 }
 
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.22);
+}
+
+@keyframes applePulse {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.apple-skeleton {
+  background: linear-gradient(90deg, #ebebf0 0%, #f5f5f7 50%, #ebebf0 100%);
+  animation: applePulse 1.5s ease-in-out infinite;
+  border-radius: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {

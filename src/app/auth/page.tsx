@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -12,7 +12,7 @@ import {
   UserCheck,
   UserPlus,
 } from 'lucide-react';
-import { NavHeader } from '@/components/nav-header';
+import { NavHeader, primeAuthSessionCache } from '@/components/nav-header';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export default function AuthPage() {
@@ -28,6 +28,12 @@ export default function AuthPage() {
   const [quickLoginRole, setQuickLoginRole] = useState<'admin' | 'user' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    router.prefetch('/app');
+    router.prefetch('/admin');
+    router.prefetch('/app/profile');
+  }, [router]);
 
   async function handleOneClickDemoLogin(role: 'admin' | 'user') {
     setQuickLoginRole(role);
@@ -58,11 +64,10 @@ export default function AuthPage() {
         password: demoCredentials.password,
       });
       if (signInErr) throw signInErr;
+      primeAuthSessionCache(demoCredentials.email, role === 'admin' ? 'admin' : 'developer');
       router.push(demoCredentials.destination);
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'One-click demo sign-in failed.');
-    } finally {
       setLoading(false);
       setQuickLoginRole(null);
     }
@@ -77,20 +82,25 @@ export default function AuthPage() {
     try {
       const supabase = createSupabaseBrowserClient();
       if (mode === 'signin') {
+        const normalizedEmail = email.trim();
         const { error: signInErr } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
         });
         if (signInErr) throw signInErr;
+        primeAuthSessionCache(
+          normalizedEmail,
+          normalizedEmail.toLowerCase() === 'admin@repomedic.dev' ? 'admin' : 'developer',
+        );
         router.push('/app');
-        router.refresh();
       } else {
+        const normalizedEmail = email.trim();
         const { data, error: signUpErr } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
           options: {
             data: {
-              full_name: fullName.trim() || email.trim().split('@')[0],
+              full_name: fullName.trim() || normalizedEmail.split('@')[0],
               organization: organization.trim() || 'RepoMedic Engineering',
               job_title: jobTitle.trim() || 'Software Engineer',
               github_username: githubUsername.trim() || null,
@@ -99,24 +109,24 @@ export default function AuthPage() {
         });
         if (signUpErr) throw signUpErr;
         if (data.session) {
+          primeAuthSessionCache(normalizedEmail, 'developer');
           router.push('/app/profile');
-          router.refresh();
         } else {
           const { error: autoSignInErr } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
+            email: normalizedEmail,
             password,
           });
           if (!autoSignInErr) {
+            primeAuthSessionCache(normalizedEmail, 'developer');
             router.push('/app/profile');
-            router.refresh();
           } else {
             setInfoMessage('Account created! Switch to Sign In to access your workspace.');
+            setLoading(false);
           }
         }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed.');
-    } finally {
       setLoading(false);
     }
   }
