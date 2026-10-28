@@ -171,4 +171,54 @@ describe('Milestone 1 Gate — Live Supabase Auth, Schema, Atomic RPCs, and RLS 
       .eq('id', incA.id);
     expect(delErr).toBeNull();
   });
+
+  it('3. verifies 1-Click Demo Admin & Developer accounts, Profile updates, and RBAC privilege guard', async () => {
+    const devClient = makeAnonClient();
+    const adminClient = makeAnonClient();
+
+    const { data: devAuth, error: devAuthErr } = await devClient.auth.signInWithPassword({
+      email: 'judge@repomedic.dev',
+      password: 'RepoMedicJudge!2026',
+    });
+    expect(devAuthErr).toBeNull();
+    expect(devAuth.user?.email).toBe('judge@repomedic.dev');
+
+    // Developer can update their own profile fields
+    const { data: updatedDevProfile, error: updateDevErr } = await devClient
+      .from('profiles')
+      .update({
+        job_title: 'Staff AI & Systems Engineer',
+      })
+      .eq('id', devAuth.user!.id)
+      .select('*')
+      .single();
+    expect(updateDevErr).toBeNull();
+    expect(updatedDevProfile?.role).toBe('developer');
+
+    // Developer cannot self-escalate role to admin (blocked by trigger guard_profile_role_update)
+    const { error: selfEscalateErr } = await devClient
+      .from('profiles')
+      .update({ role: 'admin' })
+      .eq('id', devAuth.user!.id);
+    expect(selfEscalateErr).not.toBeNull();
+
+    // Admin 1-Click Demo account signs in and can query global profiles & runs
+    const { data: adminAuth, error: adminAuthErr } = await adminClient.auth.signInWithPassword({
+      email: 'admin@repomedic.dev',
+      password: 'RepoMedicAdmin!2026',
+    });
+    expect(adminAuthErr).toBeNull();
+    expect(adminAuth.user?.email).toBe('admin@repomedic.dev');
+
+    const { data: isAdminRes, error: isAdminErr } = await adminClient.rpc('is_admin');
+    expect(isAdminErr).toBeNull();
+    expect(isAdminRes).toBe(true);
+
+    const { data: allProfiles, error: allProfilesErr } = await adminClient
+      .from('profiles')
+      .select('id, email, role')
+      .limit(10);
+    expect(allProfilesErr).toBeNull();
+    expect((allProfiles ?? []).length).toBeGreaterThanOrEqual(2);
+  });
 });

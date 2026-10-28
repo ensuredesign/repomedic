@@ -23,7 +23,7 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
     });
   });
 
-  test('2. Interactive Case Study (/demo) renders 5-stage pipeline, unified diff, and approval gate', async ({
+  test('2. Interactive Case Study (/demo) renders 5-stage pipeline, unified diff, and Resend email report drawer', async ({
     page,
   }, testInfo) => {
     await page.goto('/demo');
@@ -48,20 +48,19 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
     });
   });
 
-  test('3. Auth (/auth) -> Sign in as Judge -> Live Dashboard (/app) showing verified runs & Draft PR', async ({
+  test('3. 1-Click User Demo Login (/auth) -> Live Dashboard (/app) -> Profile Management (/app/profile)', async ({
     page,
   }, testInfo) => {
     await page.goto('/auth');
-    await expect(page.locator('h1')).toContainText('Sign in to RepoMedic');
+    await expect(page.locator('#one-click-user-login')).toBeVisible();
+    await expect(page.locator('#one-click-admin-login')).toBeVisible();
 
     const authOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;
     });
     expect(authOverflow).toBe(false);
 
-    await page.locator('#auth-email').fill('judge@repomedic.dev');
-    await page.locator('#auth-password').fill('RepoMedicJudge!2026');
-    await page.locator('button[type="submit"]').click();
+    await page.locator('#one-click-user-login').click();
 
     await page.waitForURL('**/app', { timeout: 25000 });
     await expect(page.locator('h1')).toContainText('Incident Investigation Runs');
@@ -76,6 +75,40 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
 
     await page.screenshot({
       path: `test-results/dashboard-${testInfo.project.name}.png`,
+      fullPage: true,
+    });
+
+    // Navigate to Profile Management page
+    await page.goto('/app/profile');
+    await expect(page.locator('h1')).toContainText('Developer Profile & Preferences');
+    await expect(page.locator('#profile-display-name')).toBeVisible({ timeout: 20000 });
+
+    const profileOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > window.innerWidth;
+    });
+    expect(profileOverflow).toBe(false);
+  });
+
+  test('4. 1-Click Admin Demo Login (/auth) -> Admin Control Plane (/admin) with RBAC & Global Telemetry', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/auth');
+    await page.locator('#one-click-admin-login').click();
+
+    await page.waitForURL('**/admin', { timeout: 25000 });
+    await expect(page.locator('h1')).toContainText('RepoMedic Admin Control Plane');
+    await expect(page.getByText(/User Directory & Role Management/i)).toBeVisible({
+      timeout: 20000,
+    });
+    await expect(page.locator('main').getByText('admin@repomedic.dev').first()).toBeVisible();
+
+    const adminOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > window.innerWidth;
+    });
+    expect(adminOverflow).toBe(false);
+
+    await page.screenshot({
+      path: `test-results/admin-${testInfo.project.name}.png`,
       fullPage: true,
     });
   });

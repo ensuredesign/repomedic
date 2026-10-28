@@ -3,19 +3,40 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Activity, LogIn, LogOut, PlusCircle, ShieldCheck, Terminal } from 'lucide-react';
+import {
+  Activity,
+  LogIn,
+  LogOut,
+  PlusCircle,
+  Shield,
+  ShieldCheck,
+  Terminal,
+  UserCircle2,
+} from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export function NavHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'developer' | 'admin' | null>(null);
 
   useEffect(() => {
     try {
       const supabase = createSupabaseBrowserClient();
-      supabase.auth.getUser().then(({ data }) => {
-        setUserEmail(data.user?.email ?? null);
+      supabase.auth.getUser().then(async ({ data }) => {
+        const user = data.user;
+        setUserEmail(user?.email ?? null);
+        if (user) {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+          setUserRole((prof?.role as 'developer' | 'admin') ?? 'developer');
+        } else {
+          setUserRole(null);
+        }
       });
     } catch {
       // Ignore if env not loaded on static render
@@ -26,6 +47,7 @@ export function NavHeader() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     setUserEmail(null);
+    setUserRole(null);
     router.push('/');
     router.refresh();
   }
@@ -41,7 +63,7 @@ export function NavHeader() {
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           </span>
           <span>RepoMedic</span>
-          <span className="hidden rounded-[4px] border border-[#E8E8EC] bg-[#FAFAFA] px-2 py-0.5 font-mono text-[11px] font-normal text-[#52525B] lg:inline-block">
+          <span className="hidden rounded-[4px] border border-[#E8E8EC] bg-[#FAFAFA] px-2 py-0.5 font-mono text-[11px] font-normal text-[#52525B] xl:inline-block">
             Diagnose. Patch. Prove.
           </span>
         </Link>
@@ -49,7 +71,7 @@ export function NavHeader() {
         <nav aria-label="Main Navigation" className="hidden items-center gap-1 md:flex">
           <Link
             href="/demo"
-            className={`rounded-[6px] px-3.5 py-2 text-[14px] font-medium transition-colors ${
+            className={`rounded-[6px] px-3 py-2 text-[13px] font-medium transition-colors ${
               pathname?.startsWith('/demo')
                 ? 'bg-[#6366F1] text-[#FFFFFF]'
                 : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
@@ -59,7 +81,7 @@ export function NavHeader() {
           </Link>
           <Link
             href="/app"
-            className={`rounded-[6px] px-3.5 py-2 text-[14px] font-medium transition-colors ${
+            className={`rounded-[6px] px-3 py-2 text-[13px] font-medium transition-colors ${
               pathname === '/app'
                 ? 'bg-[#6366F1] text-[#FFFFFF]'
                 : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
@@ -69,13 +91,34 @@ export function NavHeader() {
           </Link>
           <Link
             href="/app/incidents/new"
-            className={`rounded-[6px] px-3.5 py-2 text-[14px] font-medium transition-colors ${
+            className={`rounded-[6px] px-3 py-2 text-[13px] font-medium transition-colors ${
               pathname === '/app/incidents/new'
                 ? 'bg-[#6366F1] text-[#FFFFFF]'
                 : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
             }`}
           >
             New Incident
+          </Link>
+          <Link
+            href="/app/profile"
+            className={`rounded-[6px] px-3 py-2 text-[13px] font-medium transition-colors ${
+              pathname?.startsWith('/app/profile')
+                ? 'bg-[#6366F1] text-[#FFFFFF]'
+                : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+            }`}
+          >
+            Profile
+          </Link>
+          <Link
+            href="/admin"
+            className={`inline-flex items-center gap-1.5 rounded-[6px] px-3 py-2 text-[13px] font-medium transition-colors ${
+              pathname?.startsWith('/admin')
+                ? 'bg-[#6366F1] text-[#FFFFFF]'
+                : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#0A0A0A]'
+            }`}
+          >
+            <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Admin Panel</span>
           </Link>
         </nav>
 
@@ -85,25 +128,32 @@ export function NavHeader() {
             className="genesis-btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px]"
           >
             <PlusCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="hidden xs:inline sm:inline">Investigate Bug</span>
-            <span className="xs:hidden sm:hidden">Investigate</span>
+            <span className="hidden sm:inline">Investigate Bug</span>
+            <span className="sm:hidden">Investigate</span>
           </Link>
 
           {userEmail ? (
             <div className="flex items-center gap-2">
-              <span
-                className="hidden max-w-[160px] truncate font-mono text-[12px] text-[#52525B] lg:inline-block"
-                title={userEmail}
+              <Link
+                href="/app/profile"
+                className="hidden items-center gap-1.5 rounded-[6px] border border-[#E8E8EC] bg-[#FAFAFA] px-2.5 py-1 text-[12px] text-[#0A0A0A] hover:border-[#6366F1] lg:inline-flex"
+                title={`Signed in as ${userEmail}`}
               >
-                {userEmail}
-              </span>
+                <UserCircle2 className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
+                <span className="max-w-[130px] truncate font-mono text-[11px]">{userEmail}</span>
+                {userRole === 'admin' && (
+                  <span className="rounded bg-[#6366F1]/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#4F46E5]">
+                    ADMIN
+                  </span>
+                )}
+              </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
                 className="genesis-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:border-[#EF4444] hover:text-[#B91C1C]"
               >
                 <LogOut className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>Sign Out</span>
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           ) : (
@@ -121,11 +171,11 @@ export function NavHeader() {
       {/* Mobile navigation strip — 44px touch targets per UI/UX Pro Max */}
       <nav
         aria-label="Mobile Navigation"
-        className="grid grid-cols-3 gap-1 border-t border-[#E8E8EC] bg-[#FAFAFA] px-2 py-1.5 md:hidden"
+        className="grid grid-cols-5 gap-1 border-t border-[#E8E8EC] bg-[#FAFAFA] px-2 py-1.5 md:hidden"
       >
         <Link
           href="/demo"
-          className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-[6px] px-2 text-[13px] font-medium transition-colors ${
+          className={`flex min-h-[44px] items-center justify-center gap-1 rounded-[6px] px-1.5 text-[12px] font-medium transition-colors ${
             pathname?.startsWith('/demo')
               ? 'bg-[#6366F1] text-[#FFFFFF]'
               : 'text-[#52525B] hover:bg-[#FFFFFF] hover:text-[#0A0A0A]'
@@ -136,7 +186,7 @@ export function NavHeader() {
         </Link>
         <Link
           href="/app"
-          className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-[6px] px-2 text-[13px] font-medium transition-colors ${
+          className={`flex min-h-[44px] items-center justify-center gap-1 rounded-[6px] px-1.5 text-[12px] font-medium transition-colors ${
             pathname === '/app'
               ? 'bg-[#6366F1] text-[#FFFFFF]'
               : 'text-[#52525B] hover:bg-[#FFFFFF] hover:text-[#0A0A0A]'
@@ -147,14 +197,36 @@ export function NavHeader() {
         </Link>
         <Link
           href="/app/incidents/new"
-          className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-[6px] px-2 text-[13px] font-medium transition-colors ${
+          className={`flex min-h-[44px] items-center justify-center gap-1 rounded-[6px] px-1.5 text-[12px] font-medium transition-colors ${
             pathname === '/app/incidents/new'
               ? 'bg-[#6366F1] text-[#FFFFFF]'
               : 'text-[#52525B] hover:bg-[#FFFFFF] hover:text-[#0A0A0A]'
           }`}
         >
           <PlusCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>New Incident</span>
+          <span>New</span>
+        </Link>
+        <Link
+          href="/app/profile"
+          className={`flex min-h-[44px] items-center justify-center gap-1 rounded-[6px] px-1.5 text-[12px] font-medium transition-colors ${
+            pathname?.startsWith('/app/profile')
+              ? 'bg-[#6366F1] text-[#FFFFFF]'
+              : 'text-[#52525B] hover:bg-[#FFFFFF] hover:text-[#0A0A0A]'
+          }`}
+        >
+          <UserCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>Profile</span>
+        </Link>
+        <Link
+          href="/admin"
+          className={`flex min-h-[44px] items-center justify-center gap-1 rounded-[6px] px-1.5 text-[12px] font-medium transition-colors ${
+            pathname?.startsWith('/admin')
+              ? 'bg-[#6366F1] text-[#FFFFFF]'
+              : 'text-[#52525B] hover:bg-[#FFFFFF] hover:text-[#0A0A0A]'
+          }`}
+        >
+          <Shield className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>Admin</span>
         </Link>
       </nav>
     </header>

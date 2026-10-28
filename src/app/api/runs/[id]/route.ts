@@ -22,8 +22,20 @@ export async function GET(
     return apiErrorResponse(404, 'RUN_NOT_FOUND', 'Run not found or access denied.');
   }
 
-  if (!run.is_demo && (!user || run.user_id !== user.id)) {
-    return apiErrorResponse(403, 'FORBIDDEN', 'You do not have permission to view this run.');
+  if (!run.is_demo) {
+    if (!user) {
+      return apiErrorResponse(403, 'FORBIDDEN', 'You do not have permission to view this run.');
+    }
+    if (run.user_id !== user.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile?.role !== 'admin') {
+        return apiErrorResponse(403, 'FORBIDDEN', 'You do not have permission to view this run.');
+      }
+    }
   }
 
   const [incidentRes, eventsRes, patchesRes, testsRes, approvalsRes, prRes] =

@@ -14,10 +14,20 @@ export type RunStatus =
 
 export type TestResultKind = 'baseline' | 'candidate';
 
+export type UserRole = 'developer' | 'admin';
+
 export interface ProfileRow {
   id: string;
+  email: string | null;
   display_name: string | null;
+  role: UserRole;
+  organization: string;
+  job_title: string;
+  github_username: string | null;
+  notification_email: string | null;
+  bio: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface IncidentRow {
