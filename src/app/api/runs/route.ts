@@ -7,6 +7,7 @@ import { apiErrorResponse, enforceRateLimit } from '@/lib/security/api-guard';
 const CreateRunSchema = z.object({
   incidentId: z.string().uuid(),
   idempotencyKey: z.string().trim().min(6).max(120).optional(),
+  cancelStaleRuns: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -63,10 +64,10 @@ export async function POST(request: Request) {
     }
   }
 
-  // Enforce 1 concurrent active run per user (PRD Section 14)
+  // Enforce 1 concurrent active run per user (PRD Section 14), auto-expiring stale runs > 5 mins
   const { data: activeRuns } = await supabase
     .from('runs')
-    .select('id, status')
+    .select('id, status, started_at, created_at')
     .eq('user_id', user.id)
     .eq('is_demo', false)
     .in('status', [
@@ -80,11 +81,35 @@ export async function POST(request: Request) {
     ]);
 
   if (activeRuns && activeRuns.length > 0) {
-    return apiErrorResponse(
-      409,
-      'CONCURRENT_RUN_LIMIT',
-      `You already have an active investigation run (${activeRuns[0].id}). Wait for it to finish or advance it before starting another.`,
-    );
+    const nowMs = Date.now();
+    const freshActiveRuns: typeof activeRuns = [];
+
+    for (const active of activeRuns) {
+      const startedMs = new Date(active.started_at || active.created_at).getTime();
+      const isStale = nowMs - startedMs > 5 * 60 * 1000;
+      if (isStale || parsed.data.cancelStaleRuns) {
+        await supabase
+          .from('runs')
+          .update({
+            status: 'failed',
+            current_stage: 'failed',
+            finished_at: new Date().toISOString(),
+            last_error: 'Superseded by a new investigation run or expired after 5m inactivity.',
+          })
+          .eq('id', active.id)
+          .eq('user_id', user.id);
+      } else {
+        freshActiveRuns.push(active);
+      }
+    }
+
+    if (freshActiveRuns.length > 0) {
+      return apiErrorResponse(
+        409,
+        'CONCURRENT_RUN_LIMIT',
+        `You already have an active investigation run (${freshActiveRuns[0].id}). Wait for it to finish or advance it before starting another.`,
+      );
+    }
   }
 
   const nebiusCfg = getNebiusConfig();

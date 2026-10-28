@@ -33,6 +33,11 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
     await expect(
       page.getByText('Proof of Fix — Deterministic Before/After Verification'),
     ).toBeVisible({ timeout: 20000 });
+    await expect(
+      page.getByText('Automated Patch Security & Blast-Radius Audit'),
+    ).toBeVisible();
+    await expect(page.getByText('6/6 CHECKS PASSED')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Attestation JSON/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Email Report/i })).toBeVisible();
     await page.getByRole('button', { name: /Email Report/i }).click();
     await expect(page.locator('#resend-email-input')).toBeVisible();

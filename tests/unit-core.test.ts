@@ -18,6 +18,7 @@ import {
   evaluateTestOutcome,
 } from '@/lib/agent/patch-applier';
 import { getResendConfig } from '@/lib/email/resend';
+import { analyzePatchSecurityAndBlastRadius } from '@/lib/security/patch-scanner';
 
 describe('RepoMedic Core Deterministic Unit Tests', () => {
   it('1. redacts API tokens, GitHub PATs, Nebius keys, Resend keys, and JWTs from logs', () => {
@@ -149,5 +150,37 @@ Let me inspect src/pricing.ts line 45.
     const cfg = getResendConfig();
     expect(typeof cfg.configured).toBe('boolean');
     expect(cfg.fromEmail).toContain('@');
+  });
+
+  it('9. audits candidate patches for security primitives, test tampering, and surgical blast radius', () => {
+    const cleanAudit = analyzePatchSecurityAndBlastRadius({
+      unifiedDiff: [
+        '--- a/src/pricing.ts',
+        '+++ b/src/pricing.ts',
+        '@@ -42,3 +42,3 @@',
+        '-  const effective = taxRatePercent || defaultRatePercent;',
+        '+  const effective = taxRatePercent ?? defaultRatePercent;',
+      ].join('\n'),
+      expectedDiffSha256: 'd2986c85dfb2f8926d4bbf0dec800dc27c2aacc3c4c79de6c5b739148632536c',
+      touchedPaths: ['src/pricing.ts'],
+    });
+    expect(cleanAudit.overallPassed).toBe(true);
+    expect(cleanAudit.passedCount).toBe(6);
+    expect(cleanAudit.surgicalScore).toBe(100);
+    expect(cleanAudit.riskLevel).toBe('LOW');
+
+    const unsafeAudit = analyzePatchSecurityAndBlastRadius({
+      unifiedDiff: [
+        '--- a/tests/pricing.test.ts',
+        '+++ b/tests/pricing.test.ts',
+        '@@ -10,2 +10,3 @@',
+        '+  eval("process.exit(0)");',
+        '+  it.skip("bypassed test", () => {});',
+      ].join('\n'),
+      expectedDiffSha256: 'd2986c85dfb2f8926d4bbf0dec800dc27c2aacc3c4c79de6c5b739148632536c',
+      touchedPaths: ['tests/pricing.test.ts'],
+    });
+    expect(unsafeAudit.overallPassed).toBe(false);
+    expect(unsafeAudit.riskLevel).toBe('HIGH');
   });
 });

@@ -77,7 +77,7 @@ describe('Milestone 1 Gate — Live Supabase Auth, Schema, Atomic RPCs, and RLS 
       .from('incidents')
       .insert({
         user_id: userA.id,
-        repository_full_name: 'malinikochar/repomedic-fixture',
+        repository_full_name: 'ensuredesign/repomedic-fixture',
         base_sha: 'a4f91c2b8e0d413792b6c7a0e51d984f3c21b001',
         title: 'M1 RLS Verification Incident',
         error_text_redacted: 'AssertionError: expected 8.5 to be 0 at pricing.test.ts:63',

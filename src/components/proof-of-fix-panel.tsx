@@ -15,9 +15,11 @@ import {
   Mail,
   Send,
   ShieldAlert,
+  ShieldCheck,
   Terminal,
   XCircle,
 } from 'lucide-react';
+import { analyzePatchSecurityAndBlastRadius } from '@/lib/security/patch-scanner';
 import type { CompleteRunBundle } from '@/lib/supabase/types';
 
 interface ProofOfFixPanelProps {
@@ -45,6 +47,13 @@ export function ProofOfFixPanel({
   const candidateTests = testResults.filter((t) => t.kind === 'candidate');
   const latestCandidateTest = candidateTests[candidateTests.length - 1] ?? null;
   const latestPatch = patches[patches.length - 1] ?? null;
+  const securityAudit = latestPatch
+    ? analyzePatchSecurityAndBlastRadius({
+        unifiedDiff: latestPatch.unified_diff,
+        expectedDiffSha256: latestPatch.diff_sha256,
+        touchedPaths: latestPatch.touched_paths,
+      })
+    : null;
 
   const isVerified = run.status === 'verified' || run.status === 'draft_pr_created';
   const isFailedOrUnverified = run.status === 'failed' || run.status === 'unverified';
@@ -68,6 +77,24 @@ export function ProofOfFixPanel({
     a.download = `repomedic-${run.id.slice(0, 8)}-attempt-${latestPatch.attempt_number}.patch`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleDownloadAttestation() {
+    try {
+      const res = await fetch(`/api/runs/${run.id}/attestation`, { cache: 'no-store' });
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json;charset=utf-8',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `repomedic-attestation-${run.id.slice(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Ignore download failure
+    }
   }
 
   async function handleSendEmailReport(e: React.FormEvent) {
@@ -155,6 +182,14 @@ export function ProofOfFixPanel({
               >
                 <Download className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Export .patch</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadAttestation}
+                className="genesis-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px]"
+              >
+                <ShieldCheck className="h-3.5 w-3.5 text-[#047857]" aria-hidden="true" />
+                <span>Attestation JSON</span>
               </button>
               <button
                 type="button"
@@ -481,6 +516,57 @@ export function ProofOfFixPanel({
                 <strong className="text-[#0A0A0A]">Risk &amp; Scope Notes:</strong>{' '}
                 {latestPatch.risk_notes}
               </span>
+            </div>
+          )}
+
+          {/* Automated Patch Security & Blast-Radius Scanner */}
+          {securityAudit && (
+            <div className="mt-4 rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E8E8EC]">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-[#047857]" aria-hidden="true" />
+                  <h4 className="text-[14px] font-bold text-[#0A0A0A] font-display">
+                    Automated Patch Security &amp; Blast-Radius Audit
+                  </h4>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
+                  <span className="rounded-full border border-[#10B981]/40 bg-[#ECFDF5] px-2.5 py-0.5 font-semibold text-[#047857]">
+                    {securityAudit.passedCount}/{securityAudit.totalChecks} CHECKS PASSED
+                  </span>
+                  <span className="rounded-full border border-[#6366F1]/40 bg-[#6366F1]/10 px-2.5 py-0.5 font-semibold text-[#4F46E5]">
+                    SURGICAL SCORE: {securityAudit.surgicalScore}/100
+                  </span>
+                  <span className="rounded-full border border-[#E8E8EC] bg-[#FFFFFF] px-2.5 py-0.5 text-[#52525B]">
+                    +{securityAudit.linesAdded} / -{securityAudit.linesRemoved} lines ·{' '}
+                    {securityAudit.filesTouchedCount} file
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {securityAudit.checks.map((chk) => (
+                  <div
+                    key={chk.id}
+                    className="rounded-[6px] border border-[#E8E8EC] bg-[#FFFFFF] p-2.5 text-[12px]"
+                  >
+                    <div className="flex items-center gap-1.5 font-medium text-[#0A0A0A]">
+                      {chk.passed ? (
+                        <CheckCircle2
+                          className="h-3.5 w-3.5 shrink-0 text-[#047857]"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <XCircle
+                          className="h-3.5 w-3.5 shrink-0 text-[#B91C1C]"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span>{chk.label}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-[#52525B] leading-snug">{chk.detail}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

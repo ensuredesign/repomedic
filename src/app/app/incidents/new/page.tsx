@@ -12,9 +12,13 @@ import {
 } from 'lucide-react';
 import { NavHeader } from '@/components/nav-header';
 
-const SAMPLE_INCIDENT_TITLE =
-  'B2B tax-exempt orders (0% taxRatePercent) erroneously charged 8.5% default tax';
-const SAMPLE_INCIDENT_TRACE = `FAIL fixtures/buggy-order-service/tests/pricing.test.ts > calculateOrderInvoice > 5. honors explicit 0% tax rate for tax-exempt B2B orders
+const INCIDENT_PRESETS = [
+  {
+    id: 'tax-exempt-falsy',
+    label: 'Preset 1: B2B Tax-Exempt 0% Regression (src/pricing.ts)',
+    title: 'B2B tax-exempt orders (0% taxRatePercent) erroneously charged 8.5% default tax',
+    hint: 'src/pricing.ts',
+    trace: `FAIL fixtures/buggy-order-service/tests/pricing.test.ts > calculateOrderInvoice > 5. honors explicit 0% tax rate for tax-exempt B2B orders
 AssertionError: expected 8.5 to be +0 // Object.is equality
   - Expected: 0
   + Received: 8.5
@@ -24,7 +28,36 @@ AssertionError: expected 8.5 to be +0 // Object.is equality
      63|     expect(invoice.taxRatePercent).toBe(0);
        |                                    ^
      64|     expect(invoice.taxCents).toBe(0);
-     65|     expect(invoice.totalCents).toBe(20000);`;
+     65|     expect(invoice.totalCents).toBe(20000);`,
+  },
+  {
+    id: 'zero-tax-enterprise',
+    label: 'Preset 2: Enterprise Wholesale Invoice Total Mismatch ($217 vs $200)',
+    title: 'Enterprise wholesale order ORD-105 overbills $17.00 tax when taxRatePercent=0 is passed',
+    hint: 'src/pricing.ts',
+    trace: `Production Checkout Exception [OrderId=ORD-105, Tenant=Enterprise-Gov]:
+Invoice totalCents mismatch: expected 20000 cents ($200.00) for tax-exempt order (taxRatePercent: 0), but resolveTaxRatePercent returned 8.5% and billed 21700 cents ($217.00).
+Stack trace:
+  at resolveTaxRatePercent (src/pricing.ts:44:21)
+  at calculateOrderInvoice (src/pricing.ts:69:26)
+  at tests/pricing.test.ts:63:36`,
+  },
+  {
+    id: 'secret-redaction-stress',
+    label: 'Preset 3: Stack Trace with Embedded Tokens (Redaction + Repair Test)',
+    title: 'Tax-exempt B2B checkout failure with sensitive Authorization headers in error log',
+    hint: 'src/pricing.ts',
+    trace: `Alert: Checkout worker failed with Authorization: Bearer secretLiveToken9988776655 and GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqrstuvwx
+FAIL tests/pricing.test.ts > calculateOrderInvoice > 5. honors explicit 0% tax rate for tax-exempt B2B orders
+AssertionError: expected 8.5 to be +0 // Object.is equality
+  - Expected: 0
+  + Received: 8.5
+ ❯ src/pricing.ts:44:21 (const effective = taxRatePercent || defaultRatePercent)`,
+  },
+];
+
+const SAMPLE_INCIDENT_TITLE = INCIDENT_PRESETS[0].title;
+const SAMPLE_INCIDENT_TRACE = INCIDENT_PRESETS[0].trace;
 
 export default function NewIncidentPage() {
   const router = useRouter();
@@ -52,10 +85,10 @@ export default function NewIncidentPage() {
       });
   }, []);
 
-  function handlePrefillSample() {
-    setTitle(SAMPLE_INCIDENT_TITLE);
-    setAffectedFileHint('src/pricing.ts');
-    setErrorText(SAMPLE_INCIDENT_TRACE);
+  function handleSelectPreset(preset: (typeof INCIDENT_PRESETS)[number]) {
+    setTitle(preset.title);
+    setAffectedFileHint(preset.hint);
+    setErrorText(preset.trace);
     setBaseSha('440255c3e1efe73a24d2cd92b90055c54c3e3549');
   }
 
@@ -93,6 +126,7 @@ export default function NewIncidentPage() {
         body: JSON.stringify({
           incidentId: incData.incident.id,
           idempotencyKey: `inc-${incData.incident.id}`,
+          cancelStaleRuns: true,
         }),
       });
 
@@ -124,14 +158,19 @@ export default function NewIncidentPage() {
               candidate patch.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handlePrefillSample}
-            className="genesis-btn-secondary inline-flex h-[38px] items-center gap-1.5 px-3.5 text-[13px]"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
-            <span>Prefill Reproducible Fixture Bug</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {INCIDENT_PRESETS.map((preset, idx) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => handleSelectPreset(preset)}
+                className="genesis-btn-secondary inline-flex h-[38px] items-center gap-1.5 px-3 text-[12px]"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
+                <span>Preset #{idx + 1}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
