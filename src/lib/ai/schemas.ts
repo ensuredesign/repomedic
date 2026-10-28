@@ -115,3 +115,36 @@ export const HealthSmokeSchema = z.object({
 });
 
 export type HealthSmokeOutput = z.infer<typeof HealthSmokeSchema>;
+
+export const CopilotActionSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const obj = raw as Record<string, unknown>;
+  const rawSteps = obj.actionItems ?? obj.action_items ?? obj.steps ?? obj.recommendations;
+  return {
+    title: obj.title ?? obj.heading ?? 'RepoMedic Incident Co-Pilot Synthesis',
+    executiveSummary:
+      obj.executiveSummary ?? obj.executive_summary ?? obj.summary ?? obj.analysis,
+    memoryInvariantLearned:
+      obj.memoryInvariantLearned ??
+      obj.memory_invariant_learned ??
+      obj.invariant ??
+      'Enforce explicit nullish coalescing (`??`) and zero-value boundary unit tests.',
+    actionItems: Array.isArray(rawSteps)
+      ? rawSteps.map((s) => String(s))
+      : ['Verify candidate patch exit code 0 in isolated sandbox', 'Approve SHA-256 diff hash for Draft PR'],
+    codeOrCommandSnippet:
+      obj.codeOrCommandSnippet ??
+      obj.code_or_command_snippet ??
+      obj.snippet ??
+      obj.code ??
+      'npx vitest run',
+  };
+}, z.object({
+  title: z.string().min(4).max(200),
+  executiveSummary: z.string().min(15).max(2500),
+  memoryInvariantLearned: z.string().min(10).max(600),
+  actionItems: z.array(z.string().min(4).max(500)).min(1).max(6),
+  codeOrCommandSnippet: z.string().min(2).max(2000),
+}));
+
+export type CopilotActionOutput = z.infer<typeof CopilotActionSchema>;

@@ -5,6 +5,7 @@ import {
   redactSecrets,
 } from '@/lib/security/redact';
 import {
+  CopilotActionSchema,
   DiagnosisSchema,
   HealthSmokeSchema,
   PatchProposalSchema,
@@ -182,5 +183,24 @@ Let me inspect src/pricing.ts line 45.
     });
     expect(unsafeAudit.overallPassed).toBe(false);
     expect(unsafeAudit.riskLevel).toBe('HIGH');
+  });
+
+  it('10. validates CopilotActionSchema for multi-step Nemotron Co-Pilot synthesis and memory invariant learning', () => {
+    const parsed = CopilotActionSchema.parse({
+      title: 'SRE Post-Mortem: Zero-Rate Tax Coercion Regression',
+      executiveSummary:
+        'Logical OR (||) treated 0% tax rate as falsy in src/pricing.ts:43, substituting the 8.25% fallback rate. Replacing || with ?? restores explicit zero-rate tax-exempt semantics.',
+      memoryInvariantLearned:
+        'Always use nullish coalescing (??) instead of logical OR (||) for numeric rate parameters.',
+      actionItems: [
+        'Verify exit code 0 in isolated Vercel Sandbox',
+        'Approve SHA-256 diff hash to open Draft PR',
+      ],
+      codeOrCommandSnippet: 'expect(calculateInvoiceTotal({ taxRatePercent: 0 })).toBe(1000);',
+    });
+
+    expect(parsed.title).toContain('SRE Post-Mortem');
+    expect(parsed.actionItems.length).toBe(2);
+    expect(parsed.memoryInvariantLearned).toContain('nullish coalescing');
   });
 });

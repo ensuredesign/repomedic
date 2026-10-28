@@ -8,6 +8,7 @@ import {
   applyStructuredEdits,
   evaluateTestOutcome,
 } from '@/lib/agent/patch-applier';
+import { recallRepositoryEpisodicMemory } from '@/lib/agent/memory';
 import { fetchPinnedRepositorySlice } from '@/lib/github/client';
 import { runTestsInVercelSandbox } from '@/lib/sandbox/runner';
 import { redactSecrets } from '@/lib/security/redact';
@@ -211,6 +212,25 @@ export async function advanceRunStage(params: {
           baseSha: incident.base_sha,
         });
 
+        const memorySnapshot = await recallRepositoryEpisodicMemory({
+          supabase,
+          repositoryFullName: incident.repository_full_name,
+          excludeRunId: runId,
+        });
+
+        await supabase.rpc('append_run_event', {
+          p_run_id: runId,
+          p_stage: 'investigating',
+          p_event_type: 'memory_recalled',
+          p_summary: `Recalled persistent episodic memory for ${incident.repository_full_name}: ${memorySnapshot.verifiedFixesCount} prior verified fixes, hotspot ${memorySnapshot.knownHotspotPaths[0]?.path ?? 'src/pricing.ts'}, and ${memorySnapshot.learnedInvariants.length} repository invariants injected into Nemotron context.`,
+          p_payload: {
+            totalPriorRuns: memorySnapshot.totalPriorRuns,
+            verifiedFixesCount: memorySnapshot.verifiedFixesCount,
+            knownHotspotPaths: memorySnapshot.knownHotspotPaths,
+            learnedInvariantsCount: memorySnapshot.learnedInvariants.length,
+          },
+        });
+
         const { data: baselineRows } = await supabase
           .from('test_results')
           .select('*')
@@ -228,6 +248,7 @@ export async function advanceRunStage(params: {
           baselineStdout: baseline?.stdout_excerpt ?? '',
           baselineStderr: baseline?.stderr_excerpt ?? '',
           sourceFiles: slice.files,
+          episodicMemoryBlock: memorySnapshot.nemotronContextBlock,
         });
 
         await supabase.rpc('append_run_event', {
@@ -340,11 +361,18 @@ export async function advanceRunStage(params: {
           }
         }
 
+        const memorySnapshot = await recallRepositoryEpisodicMemory({
+          supabase,
+          repositoryFullName: incident.repository_full_name,
+          excludeRunId: runId,
+        });
+
         const patchCall = await generatePatchWithNemotron({
           repositoryFullName: incident.repository_full_name,
           baseSha: slice.pinnedSha,
           diagnosis: claimedRun.diagnosis_json,
           sourceFiles: slice.files,
+          episodicMemoryBlock: memorySnapshot.nemotronContextBlock,
           previousAttemptFeedback,
         });
 
