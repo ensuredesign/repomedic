@@ -10,6 +10,7 @@ import {
   ExternalLink,
   GitPullRequestDraft,
   Lock,
+  Mail,
   RefreshCw,
   ShieldAlert,
 } from 'lucide-react';
@@ -25,8 +26,10 @@ export default function ReviewAndApprovePrPage({
   const [bundle, setBundle] = useState<CompleteRunBundle | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [createdPr, setCreatedPr] = useState<PullRequestRow | null>(null);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +71,7 @@ export default function ReviewAndApprovePrPage({
 
     setSubmitting(true);
     setError(null);
+    setEmailStatus(null);
     try {
       const res = await fetch(`/api/runs/${runId}/approve-pr`, {
         method: 'POST',
@@ -76,6 +80,7 @@ export default function ReviewAndApprovePrPage({
           patchId: latestPatch.id,
           approvedDiffSha256: latestPatch.diff_sha256,
           confirmedHumanReview: true,
+          notifyEmail: notifyEmail.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -83,6 +88,11 @@ export default function ReviewAndApprovePrPage({
         throw new Error(data?.error?.message || 'Failed to create draft PR');
       }
       setCreatedPr(data.pullRequest);
+      if (data.emailNotification?.sent) {
+        setEmailStatus(
+          `Confirmation email sent via Resend to ${data.emailNotification.toEmail}.`,
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create draft PR');
     } finally {
@@ -99,7 +109,7 @@ export default function ReviewAndApprovePrPage({
           <div>
             <Link
               href={`/app/incidents/${runId}`}
-              className="inline-flex items-center gap-1.5 text-[12px] font-mono text-[#6366F1] hover:underline"
+              className="inline-flex items-center gap-1.5 text-[12px] font-mono text-[#4F46E5] hover:underline"
             >
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Back to Investigation Timeline</span>
@@ -107,7 +117,7 @@ export default function ReviewAndApprovePrPage({
             <h1 className="mt-2 text-[28px] sm:text-[32px] font-bold text-[#0A0A0A] font-display">
               Human Approval Gate — Create GitHub Draft PR
             </h1>
-            <p className="mt-1 text-[14px] text-[#6B6B6B]">
+            <p className="mt-1 text-[14px] text-[#52525B]">
               Review the exact unified diff, SHA-256 fingerprint, and isolated test evidence before
               authorizing a draft pull request on the allowlisted repository.
             </p>
@@ -117,7 +127,7 @@ export default function ReviewAndApprovePrPage({
         {loading && (
           <div className="genesis-card p-12 text-center">
             <RefreshCw className="mx-auto h-6 w-6 animate-spin text-[#6366F1]" aria-hidden="true" />
-            <p className="mt-3 text-[14px] text-[#6B6B6B]">Loading verified patch artifact…</p>
+            <p className="mt-3 text-[14px] text-[#52525B]">Loading verified patch artifact…</p>
           </div>
         )}
 
@@ -126,37 +136,37 @@ export default function ReviewAndApprovePrPage({
             {/* Verification summary strip */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="genesis-card p-4">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#9C9C9C]">
+                <div className="font-mono text-[11px] uppercase tracking-wider text-[#52525B]">
                   TARGET REPOSITORY
                 </div>
                 <div className="mt-1 font-mono text-[14px] font-medium text-[#0A0A0A]">
                   {bundle.incident.repository_full_name}
                 </div>
-                <div className="mt-0.5 font-mono text-[12px] text-[#6366F1]">
+                <div className="mt-0.5 font-mono text-[12px] text-[#4F46E5]">
                   Base SHA: {bundle.incident.base_sha.slice(0, 14)}
                 </div>
               </div>
 
               <div className="genesis-card p-4">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#9C9C9C]">
+                <div className="font-mono text-[11px] uppercase tracking-wider text-[#52525B]">
                   BEFORE / AFTER EXIT CODES
                 </div>
                 <div className="mt-1 font-mono text-[14px] font-medium">
-                  <span className="text-[#EF4444]">
+                  <span className="text-[#B91C1C]">
                     Baseline: Exit {baselineTest?.exit_code ?? '—'}
                   </span>{' '}
                   →{' '}
-                  <span className="text-[#10B981]">
+                  <span className="text-[#047857]">
                     Patched: Exit {candidateTest?.exit_code ?? '—'}
                   </span>
                 </div>
-                <div className="mt-0.5 font-mono text-[12px] text-[#6B6B6B]">
+                <div className="mt-0.5 font-mono text-[12px] text-[#52525B]">
                   Command: {candidateTest?.command ?? 'npx vitest run'}
                 </div>
               </div>
 
               <div className="genesis-card p-4">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#9C9C9C]">
+                <div className="font-mono text-[11px] uppercase tracking-wider text-[#52525B]">
                   PATCH SHA-256 FINGERPRINT
                 </div>
                 <div
@@ -175,31 +185,31 @@ export default function ReviewAndApprovePrPage({
                   <h2 className="text-[18px] font-bold text-[#0A0A0A] font-display">
                     Changed Files: {latestPatch.touched_paths.join(', ')}
                   </h2>
-                  <p className="text-[13px] text-[#6B6B6B] mt-0.5">{latestPatch.rationale}</p>
+                  <p className="text-[13px] text-[#52525B] mt-0.5">{latestPatch.rationale}</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleExportPatch}
-                  className="genesis-btn-secondary inline-flex h-[32px] items-center gap-1.5 px-3 text-[13px]"
+                  className="genesis-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px]"
                 >
                   <Download className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Download .patch File</span>
                 </button>
               </div>
 
-              <div className="overflow-x-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5 font-mono text-[12px] leading-relaxed">
+              <div className="max-w-full overflow-x-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5 font-mono text-[12px] leading-relaxed">
                 {latestPatch.unified_diff.split('\n').map((line, idx) => {
-                  let lineClass = 'text-[#6B6B6B]';
+                  let lineClass = 'text-[#52525B]';
                   if (line.startsWith('+') && !line.startsWith('+++')) {
-                    lineClass = 'bg-[#10B981]/15 text-[#0A0A0A] font-medium';
+                    lineClass = 'bg-[#ECFDF5] text-[#047857] font-medium';
                   } else if (line.startsWith('-') && !line.startsWith('---')) {
-                    lineClass = 'bg-[#EF4444]/15 text-[#EF4444]';
+                    lineClass = 'bg-[#FEF2F2] text-[#B91C1C]';
                   } else if (line.startsWith('@@')) {
-                    lineClass = 'text-[#6366F1] font-medium';
+                    lineClass = 'text-[#4F46E5] font-medium';
                   }
                   return (
                     <div key={idx} className={`px-2 py-0.5 whitespace-pre rounded-[4px] ${lineClass}`}>
-                      <span className="inline-block w-8 select-none text-right pr-3 text-[#9C9C9C]">
+                      <span className="inline-block w-8 select-none text-right pr-3 text-[#52525B]/60">
                         {idx + 1}
                       </span>
                       {line}
@@ -209,7 +219,7 @@ export default function ReviewAndApprovePrPage({
               </div>
 
               {latestPatch.risk_notes && (
-                <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5 text-[13px] text-[#6B6B6B]">
+                <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5 text-[13px] text-[#52525B]">
                   <strong className="text-[#0A0A0A]">Risk &amp; Review Notes:</strong>{' '}
                   {latestPatch.risk_notes}
                 </div>
@@ -220,21 +230,24 @@ export default function ReviewAndApprovePrPage({
             {createdPr ? (
               <div className="genesis-card border-[#10B981]/40 p-6 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-6 w-6 text-[#10B981] shrink-0 mt-0.5" aria-hidden="true" />
+                  <CheckCircle2 className="h-6 w-6 text-[#047857] shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
                     <h2 className="text-[18px] font-bold text-[#0A0A0A] font-display">
                       Draft Pull Request #{createdPr.github_pr_number} Created
                     </h2>
-                    <p className="text-[13px] text-[#6B6B6B] mt-1 font-mono">
+                    <p className="text-[13px] text-[#52525B] mt-1 font-mono">
                       Branch: {createdPr.branch_name} · Draft status enforced (no auto-merge)
                     </p>
+                    {emailStatus && (
+                      <p className="mt-1 text-[12px] font-mono text-[#047857]">{emailStatus}</p>
+                    )}
                   </div>
                 </div>
                 <a
                   href={createdPr.github_pr_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="genesis-btn-primary inline-flex h-[38px] items-center gap-2 px-4 text-[13px]"
+                  className="genesis-btn-primary inline-flex items-center gap-2 px-4 py-2 text-[13px]"
                 >
                   <GitPullRequestDraft className="h-4 w-4" aria-hidden="true" />
                   <span>Open Draft PR on GitHub</span>
@@ -252,7 +265,7 @@ export default function ReviewAndApprovePrPage({
                     <h2 className="text-[18px] font-bold text-[#0A0A0A] font-display">
                       Explicit Human Approval of Diff Hash
                     </h2>
-                    <p className="text-[13px] text-[#6B6B6B] mt-0.5">
+                    <p className="text-[13px] text-[#52525B] mt-0.5">
                       RepoMedic never allows the AI model to invoke GitHub write tools directly.
                       Approving records your user ID, timestamp, and exact patch SHA-256 in{' '}
                       <code className="font-mono">public.approvals</code> before opening a{' '}
@@ -265,6 +278,27 @@ export default function ReviewAndApprovePrPage({
                   </div>
                 </div>
 
+                <div>
+                  <label
+                    htmlFor="notify-email"
+                    className="flex items-center gap-1.5 text-[13px] font-medium text-[#0A0A0A]"
+                  >
+                    <Mail className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
+                    <span>
+                      Optional: Send Draft PR &amp; Proof-of-Fix email via Resend (
+                      <code className="font-mono text-[12px]">RepoMedic &lt;info@ensure.in&gt;</code>)
+                    </span>
+                  </label>
+                  <input
+                    id="notify-email"
+                    type="email"
+                    value={notifyEmail}
+                    onChange={(e) => setNotifyEmail(e.target.value)}
+                    placeholder="engineer@company.com (optional)"
+                    className="genesis-input mt-1.5 w-full sm:max-w-md"
+                  />
+                </div>
+
                 <label className="flex items-start gap-3 rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-4 cursor-pointer">
                   <input
                     type="checkbox"
@@ -273,7 +307,7 @@ export default function ReviewAndApprovePrPage({
                     className="mt-1 h-4 w-4 rounded border-[#E8E8EC] accent-[#6366F1]"
                   />
                   <span className="text-[13px] text-[#0A0A0A] leading-relaxed">
-                    I have reviewed the unified diff (<code className="font-mono text-[#6366F1]">sha256:{latestPatch.diff_sha256.slice(0, 16)}…</code>)
+                    I have reviewed the unified diff (<code className="font-mono text-[#4F46E5]">sha256:{latestPatch.diff_sha256.slice(0, 16)}…</code>)
                     and isolated sandbox test logs, and I authorize creating a{' '}
                     <strong>draft pull request</strong> in{' '}
                     <code className="font-mono">{bundle.incident.repository_full_name}</code>. I
@@ -284,12 +318,12 @@ export default function ReviewAndApprovePrPage({
                 {error && (
                   <div
                     role="alert"
-                    className="rounded-[6px] border border-[#EF4444]/40 bg-[#EF4444]/10 p-3.5 text-[13px] text-[#EF4444] flex items-start gap-2"
+                    className="rounded-[6px] border border-[#EF4444]/40 bg-[#FEF2F2] p-3.5 text-[13px] text-[#B91C1C] flex items-start gap-2"
                   >
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="space-y-1">
                       <div>{error}</div>
-                      <div className="text-[#6B6B6B]">
+                      <div className="text-[#52525B]">
                         You can still export the verified <code className="font-mono">.patch</code>{' '}
                         file using the Download button above.
                       </div>
@@ -298,15 +332,15 @@ export default function ReviewAndApprovePrPage({
                 )}
 
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                  <span className="inline-flex items-center gap-1.5 text-[13px] text-[#6B6B6B]">
-                    <ShieldAlert className="h-4 w-4 text-[#F59E0B]" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 text-[13px] text-[#52525B]">
+                    <ShieldAlert className="h-4 w-4 text-[#B45309]" aria-hidden="true" />
                     <span>Idempotent: duplicate clicks will never create duplicate PRs.</span>
                   </span>
 
                   <button
                     type="submit"
                     disabled={!confirmed || submitting}
-                    className="genesis-btn-primary inline-flex h-[38px] items-center gap-2 px-5 text-[13px] disabled:opacity-50"
+                    className="genesis-btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-[13px] disabled:opacity-50"
                   >
                     <GitPullRequestDraft className="h-4 w-4" aria-hidden="true" />
                     <span>

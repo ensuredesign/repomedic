@@ -271,7 +271,7 @@ export default function IncidentRunDetailPage({
             {/* Left rail: Incident + Persisted Event Log */}
             <div className="lg:col-span-4 space-y-6">
               <section className="genesis-card p-5">
-                <h2 className="font-mono text-[11px] font-medium uppercase tracking-wider text-[#9C9C9C]">
+                <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
                   Persisted Stage Event Stream
                 </h2>
                 <ol className="mt-4 space-y-3">
@@ -284,11 +284,11 @@ export default function IncidentRunDetailPage({
                         <span className="font-mono text-[12px] font-medium text-[#0A0A0A]">
                           #{ev.seq} · {ev.stage}
                         </span>
-                        <span className="font-mono text-[11px] text-[#9C9C9C]">
+                        <span className="font-mono text-[11px] text-[#52525B]">
                           {new Date(ev.created_at).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="mt-1.5 text-[13px] text-[#6B6B6B] leading-relaxed">
+                      <p className="mt-1.5 text-[13px] text-[#52525B] leading-relaxed">
                         {ev.summary}
                       </p>
                     </li>

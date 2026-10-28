@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getNebiusConfig, verifyNebiusModelCatalog } from '@/lib/ai/nebius';
+import { getResendConfig } from '@/lib/email/resend';
 import { getGitHubToken } from '@/lib/github/client';
 import { isVercelSandboxConfigured } from '@/lib/sandbox/runner';
 import { getAllowedRepositories } from '@/lib/security/redact';
@@ -57,6 +58,10 @@ export async function GET() {
       },
       vercelSandbox: {
         configured: isVercelSandboxConfigured(),
+      },
+      resend: {
+        configured: getResendConfig().configured,
+        fromEmail: getResendConfig().fromEmail,
       },
     },
   });

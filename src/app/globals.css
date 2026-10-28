@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Genesis Design System (https://designmd.ai/chef/genesis) */
+  /* Genesis Design System (https://designmd.ai/chef/genesis) + UI/UX Pro Max WCAG AA Contrast */
   --genesis-primary: #6366f1;
   --genesis-primary-hover: #4f46e5;
   --genesis-secondary: #20970b;
@@ -9,11 +9,14 @@
   --genesis-bg: #fafafa;
   --genesis-surface: #ffffff;
   --genesis-text-primary: #0a0a0a;
-  --genesis-text-secondary: #6b6b6b;
+  --genesis-text-secondary: #52525b;
   --genesis-border: #e8e8ec;
   --genesis-success: #10b981;
+  --genesis-success-text: #047857;
   --genesis-warning: #f59e0b;
+  --genesis-warning-text: #b45309;
   --genesis-error: #ef4444;
+  --genesis-error-text: #b91c1c;
 }
 
 html,
@@ -22,8 +25,10 @@ body {
   color: var(--genesis-text-primary);
   font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 15px;
+  line-height: 1.5;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1,
@@ -40,6 +45,22 @@ code,
 pre,
 .font-mono {
   font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+button,
+a,
+select,
+summary,
+[role="tab"],
+label[for] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
 }
 
 /* Genesis Interactive Dot Grid (the only allowed decorative background element) */
@@ -67,6 +88,7 @@ pre,
   color: var(--genesis-surface);
   border-radius: 6px;
   font-weight: 500;
+  min-height: 38px;
   transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
 
@@ -76,6 +98,10 @@ pre,
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
 }
 
+.genesis-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 /* Genesis Secondary Button: transparent/surface bg, 1px #E8E8EC border, 6px radius, -1px hover shift */
 .genesis-btn-secondary {
   background-color: var(--genesis-surface);
@@ -83,12 +109,24 @@ pre,
   border: 1px solid var(--genesis-border);
   border-radius: 6px;
   font-weight: 500;
+  min-height: 38px;
   transition: background-color 200ms ease, transform 200ms ease, border-color 200ms ease;
 }
 
 .genesis-btn-secondary:hover:not(:disabled) {
   background-color: var(--genesis-bg);
   transform: translateY(-1px);
+}
+
+.genesis-btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+@media (max-width: 639px) {
+  .genesis-btn-primary,
+  .genesis-btn-secondary {
+    min-height: 44px;
+  }
 }
 
 /* Genesis Input: 1px #E8E8EC border, #FFFFFF surface, 6px radius, 10px x 14px padding, 14px font, 3px indigo focus ring */
@@ -98,6 +136,7 @@ pre,
   border: 1px solid var(--genesis-border);
   border-radius: 6px;
   padding: 10px 14px;
+  min-height: 44px;
   font-size: 14px;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }

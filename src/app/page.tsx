@@ -20,20 +20,20 @@ export default function LandingPage() {
         {/* Hero section with Genesis interactive dot grid */}
         <section className="relative border-b border-[#E8E8EC] bg-[#FAFAFA] genesis-dot-grid py-12 sm:py-16 lg:py-20">
           <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E8E8EC] bg-[#FFFFFF] px-3.5 py-1 text-[12px] font-medium text-[#6B6B6B]">
-              <Cpu className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
+            <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-[#E8E8EC] bg-[#FFFFFF] px-3.5 py-1 text-[12px] font-medium text-[#52525B]">
+              <Cpu className="h-3.5 w-3.5 text-[#4F46E5]" aria-hidden="true" />
               <span>Nebius Token Factory × NVIDIA Nemotron · Autonomous Incident Repair</span>
-              <span className="font-mono text-[11px] font-medium text-[#20970B]">
+              <span className="font-mono text-[11px] font-semibold text-[#15803D]">
                 DESIGN.md Genesis
               </span>
             </div>
 
-            <h1 className="mt-6 max-w-4xl text-4xl font-bold tracking-[-0.04em] text-[#0A0A0A] sm:text-5xl lg:text-[60px] leading-[1.08] font-display">
+            <h1 className="mt-6 max-w-4xl text-3xl font-bold tracking-[-0.04em] text-[#0A0A0A] sm:text-5xl lg:text-[60px] leading-[1.08] font-display">
               Turn production exceptions into{' '}
-              <span className="text-[#6366F1]">test-backed draft pull requests</span>.
+              <span className="text-[#4F46E5]">test-backed draft pull requests</span>.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-[15px] sm:text-[17px] text-[#6B6B6B] leading-relaxed">
+            <p className="mt-6 max-w-2xl text-[15px] sm:text-[17px] text-[#52525B] leading-relaxed">
               RepoMedic fetches a pinned commit, diagnoses the exact failing code path with NVIDIA
               Nemotron via Nebius Token Factory, generates a minimal surgical patch, and proves the
               fix in an isolated Vercel Sandbox before you approve a draft GitHub PR.
@@ -51,7 +51,7 @@ export default function LandingPage() {
                 href="/app/incidents/new"
                 className="genesis-btn-secondary inline-flex h-[44px] items-center gap-2 px-6 text-[14px]"
               >
-                <Terminal className="h-4 w-4 text-[#6366F1]" aria-hidden="true" />
+                <Terminal className="h-4 w-4 text-[#4F46E5]" aria-hidden="true" />
                 <span>Investigate Live Incident</span>
               </Link>
             </div>
@@ -59,49 +59,49 @@ export default function LandingPage() {
             {/* Technology & Governance Strip */}
             <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <div className="genesis-card genesis-card-interactive p-5">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#6B6B6B]">
+                <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
                   AI Inference
                 </div>
                 <div className="mt-1.5 text-[16px] font-bold text-[#0A0A0A] font-display">
                   NVIDIA Nemotron
                 </div>
-                <div className="mt-1 text-[13px] text-[#6B6B6B] leading-relaxed">
+                <div className="mt-1 text-[13px] text-[#52525B] leading-relaxed">
                   Direct Nebius Token Factory API with strict Zod schema validation
                 </div>
               </div>
 
               <div className="genesis-card genesis-card-interactive p-5">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#10B981]">
+                <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#047857]">
                   Isolated Runner
                 </div>
                 <div className="mt-1.5 text-[16px] font-bold text-[#0A0A0A] font-display">
                   Vercel Sandbox SDK
                 </div>
-                <div className="mt-1 text-[13px] text-[#6B6B6B] leading-relaxed">
+                <div className="mt-1 text-[13px] text-[#52525B] leading-relaxed">
                   Ephemeral microVMs for baseline red &amp; patched green proofs
                 </div>
               </div>
 
               <div className="genesis-card genesis-card-interactive p-5">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#6B6B6B]">
+                <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
                   State &amp; Security
                 </div>
                 <div className="mt-1.5 text-[16px] font-bold text-[#0A0A0A] font-display">
                   Supabase Postgres + RLS
                 </div>
-                <div className="mt-1 text-[13px] text-[#6B6B6B] leading-relaxed">
+                <div className="mt-1 text-[13px] text-[#52525B] leading-relaxed">
                   Row-level ownership, atomic stage locks, secret redaction
                 </div>
               </div>
 
               <div className="genesis-card genesis-card-interactive p-5">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#F59E0B]">
+                <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#B45309]">
                   Write Safety
                 </div>
                 <div className="mt-1.5 text-[16px] font-bold text-[#0A0A0A] font-display">
                   SHA-256 Approval Gate
                 </div>
-                <div className="mt-1 text-[13px] text-[#6B6B6B] leading-relaxed">
+                <div className="mt-1 text-[13px] text-[#52525B] leading-relaxed">
                   Human sign-off on exact diff hash; draft PRs only, zero auto-merge
                 </div>
               </div>
@@ -155,13 +155,13 @@ export default function LandingPage() {
                   className="genesis-card genesis-card-interactive p-5 flex flex-col justify-between"
                 >
                   <div>
-                    <span className="font-mono text-[11px] font-medium uppercase tracking-wider text-[#9C9C9C]">
+                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#52525B]">
                       STAGE {item.step}
                     </span>
                     <h3 className="mt-2 text-[17px] font-bold text-[#0A0A0A] font-display">
                       {item.title}
                     </h3>
-                    <p className="mt-2 text-[13px] leading-relaxed text-[#6B6B6B]">{item.desc}</p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-[#52525B]">{item.desc}</p>
                   </div>
                 </div>
               ))}

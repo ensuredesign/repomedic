@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { applyUnifiedDiffToSlice } from '@/lib/agent/orchestrator';
+import { sendProofOfFixNotificationEmail } from '@/lib/email/resend';
 import {
   createApprovalGatedDraftPr,
   fetchPinnedRepositorySlice,
@@ -14,6 +15,7 @@ const ApprovePrSchema = z.object({
   patchId: z.string().uuid(),
   approvedDiffSha256: z.string().length(64),
   confirmedHumanReview: z.literal(true),
+  notifyEmail: z.string().email().max(240).optional(),
 });
 
 export async function POST(
@@ -219,10 +221,42 @@ export async function POST(
       },
     });
 
+    let emailNotification: { sent: boolean; emailId: string | null; toEmail: string } | null = null;
+    if (parsed.data.notifyEmail) {
+      const emailRes = await sendProofOfFixNotificationEmail({
+        toEmail: parsed.data.notifyEmail,
+        runId,
+        incidentTitle: incident.title,
+        repositoryFullName: incident.repository_full_name,
+        baseSha: slice.pinnedSha,
+        modelId: run.model_id,
+        rootCause:
+          run.diagnosis_json?.rootCause ||
+          'Diagnosed failing code path and verified surgical fix in isolated sandbox.',
+        rationale: patch.rationale,
+        diffSha256: actualHash,
+        unifiedDiff: patch.unified_diff,
+        baselineSummary: baseline
+          ? `${baseline.command} -> Exit ${baseline.exit_code} (${baseline.failed ?? '?'} failed, ${baseline.passed ?? '?'} passed)`
+          : 'Baseline failure reproduced',
+        candidateSummary: candidate
+          ? `${candidate.command} -> Exit ${candidate.exit_code} (${candidate.failed ?? 0} failed, ${candidate.passed ?? '?'} passed)`
+          : 'Candidate patch passed',
+        draftPrUrl: createdPr.prUrl,
+        draftPrNumber: createdPr.prNumber,
+      });
+      emailNotification = {
+        sent: emailRes.sent,
+        emailId: emailRes.emailId,
+        toEmail: emailRes.toEmail,
+      };
+    }
+
     return NextResponse.json({
       approval,
       pullRequest: savedPr,
       deduplicated: false,
+      emailNotification,
     });
   } catch (err) {
     const cleanMsg = redactSecrets(err instanceof Error ? err.message : String(err), 400);

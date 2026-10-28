@@ -12,6 +12,8 @@ import {
   FileCode2,
   GitCommit,
   GitPullRequestDraft,
+  Mail,
+  Send,
   ShieldAlert,
   Terminal,
   XCircle,
@@ -31,6 +33,13 @@ export function ProofOfFixPanel({
 }: ProofOfFixPanelProps) {
   const { incident, run, patches, testResults, pullRequest } = bundle;
   const [activeLogTab, setActiveLogTab] = useState<'baseline' | 'candidate'>('candidate');
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{
+    ok: boolean;
+    message: string;
+  } | null>(null);
 
   const baselineTest = testResults.find((t) => t.kind === 'baseline') ?? null;
   const candidateTests = testResults.filter((t) => t.kind === 'candidate');
@@ -61,24 +70,54 @@ export function ProofOfFixPanel({
     URL.revokeObjectURL(url);
   }
 
+  async function handleSendEmailReport(e: React.FormEvent) {
+    e.preventDefault();
+    setSendingEmail(true);
+    setEmailStatus(null);
+    try {
+      const res = await fetch(`/api/runs/${run.id}/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail: recipientEmail.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message || 'Failed to send Proof-of-Fix email');
+      }
+      setEmailStatus({
+        ok: true,
+        message: `Sent via Resend (${data.fromEmail}) to ${data.toEmail}${data.emailId ? ` · ID: ${data.emailId.slice(0, 12)}` : ''}`,
+      });
+    } catch (err) {
+      setEmailStatus({
+        ok: false,
+        message: err instanceof Error ? err.message : 'Failed to send email report',
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  }
+
   return (
     <section
       aria-labelledby="proof-of-fix-heading"
       className="genesis-card overflow-hidden"
     >
       {/* Header banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E8E8EC] bg-[#FAFAFA] px-5 py-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E8E8EC] bg-[#FAFAFA] px-4 py-4 sm:px-5">
+        <div className="flex items-start sm:items-center gap-3">
           {isVerified ? (
-            <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#ECFDF5] text-[#047857] border border-[#10B981]/40">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             </span>
           ) : isFailedOrUnverified ? (
-            <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#FEF2F2] text-[#B91C1C] border border-[#EF4444]/40">
               <XCircle className="h-5 w-5" aria-hidden="true" />
             </span>
           ) : (
-            <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#FFFBEB] text-[#B45309] border border-[#F59E0B]/40">
               <Clock className="h-5 w-5" aria-hidden="true" />
             </span>
           )}
@@ -86,41 +125,51 @@ export function ProofOfFixPanel({
             <div className="flex flex-wrap items-center gap-2">
               <h2
                 id="proof-of-fix-heading"
-                className="text-[18px] font-bold tracking-[-0.03em] text-[#0A0A0A] font-display"
+                className="text-[17px] sm:text-[18px] font-bold tracking-[-0.03em] text-[#0A0A0A] font-display"
               >
                 Proof of Fix — Deterministic Before/After Verification
               </h2>
               {isRecordedDemo ? (
-                <span className="rounded-full border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-3 py-1 font-mono text-[11px] font-medium text-[#F59E0B]">
+                <span className="rounded-full border border-[#F59E0B]/40 bg-[#FFFBEB] px-3 py-1 font-mono text-[11px] font-medium text-[#B45309]">
                   RECORDED CASE STUDY
                 </span>
               ) : (
-                <span className="rounded-full border border-[#10B981]/40 bg-[#10B981]/10 px-3 py-1 font-mono text-[11px] font-medium text-[#10B981]">
+                <span className="rounded-full border border-[#10B981]/40 bg-[#ECFDF5] px-3 py-1 font-mono text-[11px] font-medium text-[#047857]">
                   LIVE EXECUTION ARTIFACT
                 </span>
               )}
             </div>
-            <p className="text-[13px] text-[#6B6B6B] mt-0.5">
+            <p className="text-[13px] text-[#52525B] mt-0.5">
               Same pinned SHA, dependency lockfile, and test command executed in isolated sandboxes.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {latestPatch && (
-            <button
-              type="button"
-              onClick={handleDownloadPatch}
-              className="genesis-btn-secondary inline-flex h-[32px] items-center gap-1.5 px-3 text-[13px]"
-            >
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Export .patch</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={handleDownloadPatch}
+                className="genesis-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px]"
+              >
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Export .patch</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEmailForm((prev) => !prev)}
+                className="genesis-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px]"
+              >
+                <Mail className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
+                <span>Email Report</span>
+              </button>
+            </>
           )}
           {showReviewLink && !isRecordedDemo && isVerified && (
             <Link
               href={`/app/incidents/${run.id}/review`}
-              className="genesis-btn-primary inline-flex h-[32px] items-center gap-1.5 px-3.5 text-[13px]"
+              className="genesis-btn-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px]"
             >
               <GitPullRequestDraft className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Review &amp; Approve Draft PR</span>
@@ -131,7 +180,7 @@ export function ProofOfFixPanel({
               href={pullRequest.github_pr_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-[32px] items-center gap-1.5 rounded-[6px] border border-[#10B981]/40 bg-[#10B981]/10 px-3 text-[13px] font-medium text-[#10B981] hover:-translate-y-[1px] transition-all"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[6px] border border-[#10B981]/40 bg-[#ECFDF5] px-3 py-1.5 text-[13px] font-medium text-[#047857] hover:-translate-y-[1px] transition-all"
             >
               <GitPullRequestDraft className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Draft PR #{pullRequest.github_pr_number}</span>
@@ -141,72 +190,112 @@ export function ProofOfFixPanel({
         </div>
       </div>
 
+      {/* Optional Resend Email Report Drawer */}
+      {showEmailForm && (
+        <div className="border-b border-[#E8E8EC] bg-[#FAFAFA] px-4 py-3.5 sm:px-5">
+          <form onSubmit={handleSendEmailReport} className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-[13px] font-medium text-[#0A0A0A]">
+              <Mail className="h-4 w-4 text-[#6366F1]" aria-hidden="true" />
+              <label htmlFor="resend-email-input">
+                Send Proof-of-Fix via Resend (<code className="font-mono text-[12px]">info@ensure.in</code>):
+              </label>
+            </div>
+            <input
+              id="resend-email-input"
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              placeholder="Recipient email (blank uses your account email)"
+              className="genesis-input flex-1 min-w-[220px]"
+            />
+            <button
+              type="submit"
+              disabled={sendingEmail}
+              className="genesis-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-[13px] disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{sendingEmail ? 'Sending…' : 'Send Email'}</span>
+            </button>
+          </form>
+          {emailStatus && (
+            <p
+              role="status"
+              className={`mt-2 text-[12px] font-mono ${
+                emailStatus.ok ? 'text-[#047857]' : 'text-[#B91C1C]'
+              }`}
+            >
+              {emailStatus.message}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Metadata provenance grid */}
-      <div className="grid grid-cols-1 gap-4 border-b border-[#E8E8EC] bg-[#FFFFFF] p-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 border-b border-[#E8E8EC] bg-[#FFFFFF] p-4 sm:p-5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+          <div className="flex items-center gap-1.5 text-[12px] text-[#52525B]">
             <GitCommit className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
             <span>Repository &amp; Pinned Base SHA</span>
           </div>
           <p className="mt-1 font-mono text-[13px] font-medium text-[#0A0A0A] truncate">
             {incident.repository_full_name}
           </p>
-          <p className="font-mono text-[12px] text-[#6366F1] truncate" title={incident.base_sha}>
+          <p className="font-mono text-[12px] text-[#4F46E5] truncate" title={incident.base_sha}>
             SHA: {incident.base_sha.slice(0, 16)}
           </p>
         </div>
 
         <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+          <div className="flex items-center gap-1.5 text-[12px] text-[#52525B]">
             <Cpu className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
             <span>Nebius / NVIDIA Model</span>
           </div>
           <p className="mt-1 font-mono text-[13px] font-medium text-[#0A0A0A] truncate" title={run.model_id}>
             {run.model_id}
           </p>
-          <p className="font-mono text-[12px] text-[#6B6B6B]">
+          <p className="font-mono text-[12px] text-[#52525B]">
             Tokens: {run.input_tokens} in / {run.output_tokens} out
           </p>
         </div>
 
         <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+          <div className="flex items-center gap-1.5 text-[12px] text-[#52525B]">
             <FileCode2 className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
             <span>Attempt &amp; Touched Paths</span>
           </div>
           <p className="mt-1 font-mono text-[13px] font-medium text-[#0A0A0A]">
             Attempt {run.attempt_count} / 2
           </p>
-          <p className="font-mono text-[12px] text-[#6B6B6B] truncate">
+          <p className="font-mono text-[12px] text-[#52525B] truncate">
             {latestPatch ? latestPatch.touched_paths.join(', ') : 'No patch applied yet'}
           </p>
         </div>
 
         <div className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-[#6B6B6B]">
+          <div className="flex items-center gap-1.5 text-[12px] text-[#52525B]">
             <Clock className="h-3.5 w-3.5 text-[#6366F1]" aria-hidden="true" />
             <span>Verification Status &amp; Elapsed</span>
           </div>
           <p className="mt-1 font-mono text-[13px] font-medium uppercase tracking-wider text-[#0A0A0A]">
             {run.status.replace(/_/g, ' ')}
           </p>
-          <p className="font-mono text-[12px] text-[#6B6B6B]">
+          <p className="font-mono text-[12px] text-[#52525B]">
             {durationSeconds !== null ? `${durationSeconds}s total duration` : 'In progress'}
           </p>
         </div>
       </div>
 
       {/* Side-by-side Baseline Red vs Patched Green Cards */}
-      <div className="grid grid-cols-1 gap-5 p-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 p-4 sm:gap-5 sm:p-5 lg:grid-cols-2">
         {/* Baseline Card */}
         <div className="rounded-[12px] border border-[#EF4444]/35 bg-[#FAFAFA] p-4">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EF4444]/10 px-3 py-1 font-mono text-[12px] font-medium text-[#EF4444]">
-              <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] border border-[#EF4444]/30 px-3 py-1 font-mono text-[12px] font-medium text-[#B91C1C]">
+              <XCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>1. BASELINE CHECK (UNMODIFIED SHA)</span>
             </span>
             {baselineTest && (
-              <span className="font-mono text-[12px] text-[#9C9C9C]">
+              <span className="font-mono text-[12px] text-[#52525B]">
                 {baselineTest.duration_ms}ms
               </span>
             )}
@@ -215,30 +304,30 @@ export function ProofOfFixPanel({
           {baselineTest ? (
             <div className="mt-3 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-[8px] border border-[#E8E8EC] bg-[#FFFFFF] px-3 py-2 font-mono text-[12px]">
-                <span className="text-[#6B6B6B]">
+                <span className="text-[#52525B]">
                   Command: <strong className="text-[#0A0A0A]">{baselineTest.command}</strong>
                 </span>
                 <span
                   className={
                     baselineTest.exit_code !== 0
-                      ? 'text-[#EF4444] font-medium'
-                      : 'text-[#F59E0B] font-medium'
+                      ? 'text-[#B91C1C] font-medium'
+                      : 'text-[#B45309] font-medium'
                   }
                 >
                   Exit Code: {baselineTest.exit_code}
                 </span>
               </div>
               <div className="flex items-center gap-4 text-[12px] font-mono px-1">
-                <span className="text-[#EF4444] font-medium">
+                <span className="text-[#B91C1C] font-medium">
                   Failed: {baselineTest.failed !== null ? baselineTest.failed : 'N/A (see exit code)'}
                 </span>
-                <span className="text-[#10B981] font-medium">
+                <span className="text-[#047857] font-medium">
                   Passed: {baselineTest.passed !== null ? baselineTest.passed : 'N/A'}
                 </span>
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-[13px] text-[#6B6B6B]">
+            <p className="mt-3 text-[13px] text-[#52525B]">
               Baseline test has not completed yet.
             </p>
           )}
@@ -252,23 +341,23 @@ export function ProofOfFixPanel({
               : 'border-[#E8E8EC]'
           }`}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[12px] font-medium ${
                 latestCandidateTest?.exit_code === 0
-                  ? 'bg-[#10B981]/10 text-[#10B981]'
-                  : 'bg-[#F59E0B]/10 text-[#F59E0B]'
+                  ? 'bg-[#ECFDF5] border border-[#10B981]/30 text-[#047857]'
+                  : 'bg-[#FFFBEB] border border-[#F59E0B]/30 text-[#B45309]'
               }`}
             >
               {latestCandidateTest?.exit_code === 0 ? (
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               ) : (
-                <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               )}
               <span>2. POST-PATCH CHECK (ISOLATED SANDBOX)</span>
             </span>
             {latestCandidateTest && (
-              <span className="font-mono text-[12px] text-[#9C9C9C]">
+              <span className="font-mono text-[12px] text-[#52525B]">
                 {latestCandidateTest.duration_ms}ms
               </span>
             )}
@@ -277,14 +366,14 @@ export function ProofOfFixPanel({
           {latestCandidateTest ? (
             <div className="mt-3 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-[8px] border border-[#E8E8EC] bg-[#FFFFFF] px-3 py-2 font-mono text-[12px]">
-                <span className="text-[#6B6B6B]">
+                <span className="text-[#52525B]">
                   Command: <strong className="text-[#0A0A0A]">{latestCandidateTest.command}</strong>
                 </span>
                 <span
                   className={
                     latestCandidateTest.exit_code === 0
-                      ? 'text-[#10B981] font-medium'
-                      : 'text-[#EF4444] font-medium'
+                      ? 'text-[#047857] font-medium'
+                      : 'text-[#B91C1C] font-medium'
                   }
                 >
                   Exit Code: {latestCandidateTest.exit_code}
@@ -294,19 +383,19 @@ export function ProofOfFixPanel({
                 <span
                   className={
                     (latestCandidateTest.failed ?? 0) === 0
-                      ? 'text-[#6B6B6B]'
-                      : 'text-[#EF4444]'
+                      ? 'text-[#52525B]'
+                      : 'text-[#B91C1C]'
                   }
                 >
                   Failed: {latestCandidateTest.failed !== null ? latestCandidateTest.failed : '0'}
                 </span>
-                <span className="text-[#10B981] font-medium">
+                <span className="text-[#047857] font-medium">
                   Passed: {latestCandidateTest.passed !== null ? latestCandidateTest.passed : 'All'}
                 </span>
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-[13px] text-[#6B6B6B]">
+            <p className="mt-3 text-[13px] text-[#52525B]">
               Post-patch verification test has not run yet.
             </p>
           )}
@@ -315,12 +404,12 @@ export function ProofOfFixPanel({
 
       {/* Root cause & Evidence section */}
       {run.diagnosis_json && (
-        <div className="border-t border-[#E8E8EC] px-5 py-5">
+        <div className="border-t border-[#E8E8EC] px-4 py-5 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-[16px] font-bold text-[#0A0A0A] font-display">
               Root-Cause Diagnosis &amp; Line-Linked Evidence
             </h3>
-            <span className="rounded-full border border-[#10B981]/30 bg-[#10B981]/10 px-3 py-1 font-mono text-[11px] font-medium text-[#10B981]">
+            <span className="rounded-full border border-[#10B981]/30 bg-[#ECFDF5] px-3 py-1 font-mono text-[11px] font-medium text-[#047857]">
               Confidence: {run.diagnosis_json.confidenceLabel.replace(/_/g, ' ')}
             </span>
           </div>
@@ -335,10 +424,10 @@ export function ProofOfFixPanel({
                   key={`${ev.path}-${idx}`}
                   className="rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5"
                 >
-                  <div className="font-mono text-[12px] font-medium text-[#6366F1]">
+                  <div className="font-mono text-[12px] font-medium text-[#4F46E5]">
                     {ev.path}:{ev.lines}
                   </div>
-                  <p className="mt-1 text-[13px] text-[#6B6B6B]">{ev.reason}</p>
+                  <p className="mt-1 text-[13px] text-[#52525B]">{ev.reason}</p>
                 </div>
               ))}
             </div>
@@ -348,35 +437,35 @@ export function ProofOfFixPanel({
 
       {/* Unified Diff Viewer */}
       {latestPatch && (
-        <div className="border-t border-[#E8E8EC] px-5 py-5">
+        <div className="border-t border-[#E8E8EC] px-4 py-5 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div>
               <h3 className="text-[16px] font-bold text-[#0A0A0A] font-display">
                 Validated Candidate Patch (Attempt #{latestPatch.attempt_number})
               </h3>
-              <p className="text-[13px] text-[#6B6B6B] mt-0.5">{latestPatch.rationale}</p>
+              <p className="text-[13px] text-[#52525B] mt-0.5">{latestPatch.rationale}</p>
             </div>
             <span
-              className="rounded-[4px] bg-[#FAFAFA] px-2.5 py-1 font-mono text-[11px] text-[#6B6B6B] border border-[#E8E8EC]"
+              className="rounded-[4px] bg-[#FAFAFA] px-2.5 py-1 font-mono text-[11px] text-[#52525B] border border-[#E8E8EC]"
               title={latestPatch.diff_sha256}
             >
               SHA-256: {latestPatch.diff_sha256.slice(0, 16)}…
             </span>
           </div>
 
-          <div className="overflow-x-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5 font-mono text-[12px] leading-relaxed">
+          <div className="max-w-full overflow-x-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3.5 font-mono text-[12px] leading-relaxed">
             {latestPatch.unified_diff.split('\n').map((line, idx) => {
-              let lineClass = 'text-[#6B6B6B]';
+              let lineClass = 'text-[#52525B]';
               if (line.startsWith('+') && !line.startsWith('+++')) {
-                lineClass = 'bg-[#10B981]/15 text-[#0A0A0A] font-medium';
+                lineClass = 'bg-[#ECFDF5] text-[#047857] font-medium';
               } else if (line.startsWith('-') && !line.startsWith('---')) {
-                lineClass = 'bg-[#EF4444]/15 text-[#EF4444]';
+                lineClass = 'bg-[#FEF2F2] text-[#B91C1C]';
               } else if (line.startsWith('@@')) {
-                lineClass = 'text-[#6366F1] font-medium';
+                lineClass = 'text-[#4F46E5] font-medium';
               }
               return (
                 <div key={idx} className={`px-2 py-0.5 whitespace-pre rounded-[4px] ${lineClass}`}>
-                  <span className="inline-block w-8 select-none text-right pr-3 text-[#9C9C9C]">
+                  <span className="inline-block w-8 select-none text-right pr-3 text-[#52525B]/60">
                     {idx + 1}
                   </span>
                   {line}
@@ -386,8 +475,8 @@ export function ProofOfFixPanel({
           </div>
 
           {latestPatch.risk_notes && (
-            <div className="mt-3 flex items-start gap-2 rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] px-3.5 py-2.5 text-[13px] text-[#6B6B6B]">
-              <ShieldAlert className="h-4 w-4 shrink-0 text-[#F59E0B] mt-0.5" aria-hidden="true" />
+            <div className="mt-3 flex items-start gap-2 rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] px-3.5 py-2.5 text-[13px] text-[#52525B]">
+              <ShieldAlert className="h-4 w-4 shrink-0 text-[#B45309] mt-0.5" aria-hidden="true" />
               <span>
                 <strong className="text-[#0A0A0A]">Risk &amp; Scope Notes:</strong>{' '}
                 {latestPatch.risk_notes}
@@ -399,7 +488,7 @@ export function ProofOfFixPanel({
 
       {/* Tab-accessible Sandbox Test Output Logs */}
       {(baselineTest || latestCandidateTest) && (
-        <div className="border-t border-[#E8E8EC] px-5 py-5">
+        <div className="border-t border-[#E8E8EC] px-4 py-5 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-[#6366F1]" aria-hidden="true" />
@@ -410,17 +499,17 @@ export function ProofOfFixPanel({
             <div
               role="tablist"
               aria-label="Test output logs"
-              className="flex rounded-[6px] bg-[#FAFAFA] p-1 border border-[#E8E8EC]"
+              className="flex rounded-[6px] bg-[#FAFAFA] p-1 border border-[#E8E8EC] w-full sm:w-auto"
             >
               <button
                 type="button"
                 role="tab"
                 aria-selected={activeLogTab === 'baseline'}
                 onClick={() => setActiveLogTab('baseline')}
-                className={`rounded-[4px] px-3 py-1 font-mono text-[12px] transition-colors ${
+                className={`flex-1 sm:flex-initial min-h-[38px] rounded-[4px] px-3 py-1 font-mono text-[12px] transition-colors ${
                   activeLogTab === 'baseline'
-                    ? 'bg-[#FFFFFF] text-[#EF4444] font-medium border border-[#E8E8EC]'
-                    : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
+                    ? 'bg-[#FFFFFF] text-[#B91C1C] font-medium border border-[#E8E8EC]'
+                    : 'text-[#52525B] hover:text-[#0A0A0A]'
                 }`}
               >
                 Baseline Log (Exit {baselineTest?.exit_code ?? '—'})
@@ -430,10 +519,10 @@ export function ProofOfFixPanel({
                 role="tab"
                 aria-selected={activeLogTab === 'candidate'}
                 onClick={() => setActiveLogTab('candidate')}
-                className={`rounded-[4px] px-3 py-1 font-mono text-[12px] transition-colors ${
+                className={`flex-1 sm:flex-initial min-h-[38px] rounded-[4px] px-3 py-1 font-mono text-[12px] transition-colors ${
                   activeLogTab === 'candidate'
-                    ? 'bg-[#FFFFFF] text-[#10B981] font-medium border border-[#E8E8EC]'
-                    : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
+                    ? 'bg-[#FFFFFF] text-[#047857] font-medium border border-[#E8E8EC]'
+                    : 'text-[#52525B] hover:text-[#0A0A0A]'
                 }`}
               >
                 Post-Patch Log (Exit {latestCandidateTest?.exit_code ?? '—'})
@@ -441,7 +530,7 @@ export function ProofOfFixPanel({
             </div>
           </div>
 
-          <pre className="max-h-64 overflow-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-4 font-mono text-[12px] text-[#0A0A0A] whitespace-pre-wrap">
+          <pre className="max-h-64 max-w-full overflow-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-4 font-mono text-[12px] text-[#0A0A0A] whitespace-pre-wrap break-words">
             {activeLogTab === 'baseline'
               ? `${baselineTest?.stdout_excerpt || ''}\n${baselineTest?.stderr_excerpt || ''}`.trim() ||
                 'No baseline log output recorded.'

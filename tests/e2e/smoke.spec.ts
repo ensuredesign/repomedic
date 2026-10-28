@@ -33,6 +33,9 @@ test.describe('RepoMedic Production UI & Responsive Verification (M3/M4)', () =>
     await expect(
       page.getByText('Proof of Fix — Deterministic Before/After Verification'),
     ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: /Email Report/i })).toBeVisible();
+    await page.getByRole('button', { name: /Email Report/i }).click();
+    await expect(page.locator('#resend-email-input')).toBeVisible();
 
     const overflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;

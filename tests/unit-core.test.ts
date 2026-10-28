@@ -17,17 +17,20 @@ import {
   applyStructuredEdits,
   evaluateTestOutcome,
 } from '@/lib/agent/patch-applier';
+import { getResendConfig } from '@/lib/email/resend';
 
 describe('RepoMedic Core Deterministic Unit Tests', () => {
-  it('1. redacts API tokens, GitHub PATs, Nebius keys, and JWTs from logs', () => {
+  it('1. redacts API tokens, GitHub PATs, Nebius keys, Resend keys, and JWTs from logs', () => {
     const raw =
-      'Error with ghp_1234567890abcdefghijklmnopqrstuvwx and v1.abcdef1234567890abcdefghijklmnopqrstuvwx and Authorization: Bearer secretToken123456789';
+      'Error with ghp_1234567890abcdefghijklmnopqrstuvwx and v1.abcdef1234567890abcdefghijklmnopqrstuvwx and re_abcdef1234567890abcd and Authorization: Bearer secretToken123456789';
     const cleaned = redactSecrets(raw);
     expect(cleaned).not.toContain('ghp_1234567890');
     expect(cleaned).not.toContain('v1.abcdef1234567890');
+    expect(cleaned).not.toContain('re_abcdef1234567890abcd');
     expect(cleaned).not.toContain('secretToken123456789');
     expect(cleaned).toContain('[REDACTED_GITHUB_TOKEN]');
     expect(cleaned).toContain('[REDACTED_NEBIUS_KEY]');
+    expect(cleaned).toContain('[REDACTED_RESEND_KEY]');
     expect(cleaned).toContain('[REDACTED_AUTH_HEADER]');
   });
 
@@ -140,5 +143,11 @@ Let me inspect src/pricing.ts line 45.
       capabilities: ['root_cause_analysis', 'minimal_patch_generation'],
     });
     expect(valid.status).toBe('ready');
+  });
+
+  it('8. resolves Resend email notification configuration safely', () => {
+    const cfg = getResendConfig();
+    expect(typeof cfg.configured).toBe('boolean');
+    expect(cfg.fromEmail).toContain('@');
   });
 });

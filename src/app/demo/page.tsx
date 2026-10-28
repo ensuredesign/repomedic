@@ -57,11 +57,11 @@ export default function DemoCaseStudyPage() {
                   <h1 className="text-[20px] font-bold text-[#0A0A0A] font-display">
                     Judge Inspection View — Recorded Case Study vs. Live Investigation
                   </h1>
-                  <span className="rounded-full border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-3 py-1 font-mono text-[11px] font-medium text-[#F59E0B]">
+                  <span className="rounded-full border border-[#B45309]/30 bg-[#FFFBEB] px-3 py-1 font-mono text-[11px] font-semibold text-[#B45309]">
                     READ-ONLY RECORDED CASE STUDY
                   </span>
                 </div>
-                <p className="mt-1.5 text-[14px] text-[#6B6B6B] max-w-3xl leading-relaxed">
+                <p className="mt-1.5 text-[14px] text-[#52525B] max-w-3xl leading-relaxed">
                   {disclaimer ||
                     'Below is a curated, read-only case study stored in Supabase (is_demo=true) so judges can inspect a complete Proof of Fix immediately without signing in. To execute a fresh runtime call to Nebius Token Factory + Vercel Sandbox, click "Run Live Investigation".'}
                 </p>
@@ -70,7 +70,7 @@ export default function DemoCaseStudyPage() {
 
             <Link
               href="/app/incidents/new"
-              className="genesis-btn-primary inline-flex h-[38px] items-center gap-2 px-4 text-[13px] shrink-0"
+              className="genesis-btn-primary inline-flex min-h-[44px] sm:min-h-[38px] items-center gap-2 px-4 text-[13px] shrink-0"
             >
               <Play className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Run Live Investigation</span>
@@ -106,24 +106,24 @@ export default function DemoCaseStudyPage() {
             {/* Left column: Incident + Stage Event Rail */}
             <div className="lg:col-span-4 space-y-6">
               <section className="genesis-card p-5">
-                <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#9C9C9C] font-mono">
+                <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] font-mono">
                   Incident Input
                 </h2>
                 <h3 className="mt-2 text-[17px] font-bold text-[#0A0A0A] font-display">
                   {bundle.incident.title}
                 </h3>
-                <div className="mt-2 font-mono text-[12px] text-[#6366F1]">
+                <div className="mt-2 font-mono text-[12px] text-[#4F46E5] font-medium">
                   Repo: {bundle.incident.repository_full_name}
                 </div>
-                <div className="font-mono text-[12px] text-[#6B6B6B]">
+                <div className="font-mono text-[12px] text-[#52525B]">
                   Pinned SHA: {bundle.incident.base_sha.slice(0, 16)}
                 </div>
 
                 <div className="mt-3">
-                  <div className="text-[12px] font-medium text-[#6B6B6B] mb-1.5">
+                  <div className="text-[12px] font-medium text-[#52525B] mb-1.5">
                     Failing Stack Trace / Test Output:
                   </div>
-                  <pre className="max-h-48 overflow-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3 font-mono text-[11px] text-[#EF4444] whitespace-pre-wrap">
+                  <pre className="max-h-48 overflow-auto rounded-[8px] border border-[#E8E8EC] bg-[#FAFAFA] p-3 font-mono text-[11px] text-[#B91C1C] whitespace-pre-wrap">
                     {bundle.incident.error_text_redacted}
                   </pre>
                 </div>
@@ -131,10 +131,10 @@ export default function DemoCaseStudyPage() {
 
               <section className="genesis-card p-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#9C9C9C] font-mono">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#52525B] font-mono">
                     Recorded Stage Timeline
                   </h2>
-                  <span className="font-mono text-[12px] text-[#9C9C9C]">
+                  <span className="font-mono text-[12px] text-[#52525B]">
                     {bundle.events.length} events
                   </span>
                 </div>
@@ -147,16 +147,16 @@ export default function DemoCaseStudyPage() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="inline-flex items-center gap-1.5 font-mono text-[12px] font-medium text-[#0A0A0A]">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-[#10B981]" aria-hidden="true" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-[#047857]" aria-hidden="true" />
                           <span>
                             #{ev.seq} · {ev.stage}
                           </span>
                         </span>
-                        <span className="font-mono text-[11px] text-[#9C9C9C]">
+                        <span className="font-mono text-[11px] text-[#52525B]">
                           {ev.event_type}
                         </span>
                       </div>
-                      <p className="mt-1.5 text-[13px] text-[#6B6B6B] leading-relaxed">
+                      <p className="mt-1.5 text-[13px] text-[#52525B] leading-relaxed">
                         {ev.summary}
                       </p>
                     </li>

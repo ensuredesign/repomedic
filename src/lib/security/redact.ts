@@ -22,6 +22,10 @@ const SECRET_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
     replacement: '[REDACTED_NEBIUS_KEY]',
   },
   {
+    pattern: /\b(re_[A-Za-z0-9_]{16,})\b/g,
+    replacement: '[REDACTED_RESEND_KEY]',
+  },
+  {
     pattern: /(Authorization\s*:\s*(?:Bearer|Basic)\s+)[^\s"']+/gi,
     replacement: '$1[REDACTED_AUTH_HEADER]',
   },
