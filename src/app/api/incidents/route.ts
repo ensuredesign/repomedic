@@ -62,7 +62,7 @@ export async function GET() {
   const { data: incidents, error } = await supabase
     .from('incidents')
     .select(
-      'id, user_id, repository_full_name, base_sha, title, error_text_redacted, affected_file_hint, is_demo, created_at, updated_at, runs(id, incident_id, status, attempt_count, model_id, input_tokens, output_tokens, last_error, started_at, completed_at, created_at, updated_at)',
+      'id, user_id, repository_full_name, base_sha, title, error_text_redacted, affected_file_hint, is_demo, created_at, updated_at, runs(id, incident_id, status, attempt_count, model_id, input_tokens, output_tokens, last_error, created_at, updated_at)',
     )
     .eq('user_id', user.id)
     .eq('is_demo', false)
