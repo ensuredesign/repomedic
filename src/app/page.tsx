@@ -79,13 +79,23 @@ export default function LandingPage() {
                     Watch RepoMedic in Action (2:31 Smooth Walkthrough with Voiceover)
                   </h2>
                 </div>
-                <a
-                  href="/demo-assets/repomedic-hackathon-demo-2min.mp4"
-                  download="repomedic-hackathon-demo-2min.mp4"
-                  className="inline-flex h-[38px] items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 px-4 text-[12px] font-medium text-white transition-colors"
-                >
-                  <span>Download 1080p MP4 (2:31)</span>
-                </a>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <a
+                    href="https://youtu.be/4Yephus8x1g"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-[38px] items-center gap-2 rounded-full bg-[#FF0000]/90 hover:bg-[#FF0000] px-4 text-[12px] font-semibold text-white transition-colors shadow-sm"
+                  >
+                    <span>▶ Watch on YouTube</span>
+                  </a>
+                  <a
+                    href="/demo-assets/repomedic-hackathon-demo-2min.mp4"
+                    download="repomedic-hackathon-demo-2min.mp4"
+                    className="inline-flex h-[38px] items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 px-4 text-[12px] font-medium text-white transition-colors"
+                  >
+                    <span>Download 1080p MP4 (2:31)</span>
+                  </a>
+                </div>
               </div>
 
               <div className="mt-4 overflow-hidden rounded-[16px] border border-white/10 bg-black">

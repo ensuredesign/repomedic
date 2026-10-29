@@ -9,7 +9,7 @@
 Built for the **Nebius × NVIDIA Global AI Hackathon** (*Coding and Agentic Engineering* Track)
 
 [![Live Vercel App](https://img.shields.io/badge/Live_Production-repomedic--eta.vercel.app-0071E3?style=for-the-badge&logo=vercel&logoColor=white)](https://repomedic-eta.vercel.app)
-[![Smooth 1080p Demo Film](https://img.shields.io/badge/Demo_Film_(2:31_HD)-Watch_MP4-30D158?style=for-the-badge&logo=youtube&logoColor=white)](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4)
+[![Watch on YouTube](https://img.shields.io/badge/Watch_on_YouTube-Official_Demo_(2:31_HD)-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/4Yephus8x1g)
 [![1-Click Judge Login](https://img.shields.io/badge/1--Click_Jury_Access-/auth_Portal-6366F1?style=for-the-badge&logo=supabase&logoColor=white)](https://repomedic-eta.vercel.app/auth)
 
 [![Nebius Token Factory](https://img.shields.io/badge/AI_Runtime-Nebius_Token_Factory-111827?style=flat-square)](https://tokenfactory.nebius.com)
@@ -21,6 +21,7 @@ Built for the **Nebius × NVIDIA Global AI Hackathon** (*Coding and Agentic Engi
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=flat-square)](./LICENSE)
 
 <p align="center">
+  <a href="#official-app-demo-video">Demo Video</a> •
   <a href="#1-why-repomedic">Why RepoMedic</a> •
   <a href="#2-what-repomedic-does">What It Does</a> •
   <a href="#3-how-repomedic-works--system-flow-diagrams">How It Works & Flow Diagrams</a> •
@@ -40,12 +41,28 @@ Built for the **Nebius × NVIDIA Global AI Hackathon** (*Coding and Agentic Engi
 
 ---
 
+## Official App Demo Video
+
+<div align="center">
+  <a href="https://youtu.be/4Yephus8x1g">
+    <img src="./public/appimages/youtube_demo_preview.png" alt="Watch RepoMedic Official App Demo Video on YouTube — https://youtu.be/4Yephus8x1g" width="92%" />
+  </a>
+  <p>
+    <strong>▶ <a href="https://youtu.be/4Yephus8x1g">Watch Official 1080p Demo Video on YouTube (https://youtu.be/4Yephus8x1g)</a></strong>
+    &nbsp;•&nbsp;
+    <a href="https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4">Direct 1080p MP4 Mirror</a>
+  </p>
+</div>
+
+---
+
 ## Quick Production Links & Live Artifacts
 
 | Resource | Live URL / Reference |
 | :--- | :--- |
 | **Live Production Web App (Vercel)** | [https://repomedic-eta.vercel.app](https://repomedic-eta.vercel.app) |
-| **Official Smooth 1080p Demo Video (`2:31` MP4 w/ Voiceover)** | [https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4) |
+| **Official YouTube App Demo Video (`2:31` 1080p HD)** | [https://youtu.be/4Yephus8x1g](https://youtu.be/4Yephus8x1g) |
+| **Direct 1080p MP4 Demo Video Mirror** | [https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4) |
 | **1-Click Judge & Admin Login Portal (`/auth`)** | [https://repomedic-eta.vercel.app/auth](https://repomedic-eta.vercel.app/auth) |
 | **Zero-Auth Recorded Case Study (`/demo`)** | [https://repomedic-eta.vercel.app/demo](https://repomedic-eta.vercel.app/demo) |
 | **Platform Admin Control Plane (`/admin`)** | [https://repomedic-eta.vercel.app/admin](https://repomedic-eta.vercel.app/admin) |

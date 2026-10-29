@@ -1,5 +1,6 @@
 # RepoMedic — Official Smooth 1080p Demo Video Script & Judge Guide (`2:31`)
 
+- **Official YouTube Demo Video (`1080p HD`):** [https://youtu.be/4Yephus8x1g](https://youtu.be/4Yephus8x1g)
 - **Rendered 1080p Full HD MP4 (Remotion 4.0 · Smooth Pixel-Locked Motion · Studio Voiceover):** [`/demo-assets/repomedic-hackathon-demo-2min.mp4`](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4) (`1920×1080`, `30fps`, `2m 31s`, `-16 LUFS` mastered audio, zero zoom jitter, zero bottom text captions)
 - **Track:** Coding and Agentic Engineering (**Nebius × NVIDIA Global AI Hackathon**)
 - **Maintainer:** `Ritesh Kochar / ensuredesign` (`ensure01@gmail.com`)
