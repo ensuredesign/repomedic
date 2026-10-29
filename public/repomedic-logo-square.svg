@@ -1,0 +1,88 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg-glow" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="55%" stop-color="#0F111A" />
+      <stop offset="100%" stop-color="#07080D" />
+    </radialGradient>
+    <linearGradient id="shield-stroke" x1="256" y1="160" x2="768" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818CF8" />
+      <stop offset="52%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <linearGradient id="shield-fill" x1="312" y1="180" x2="712" y2="680" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#312E81" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#064E3B" stop-opacity="0.35" />
+    </linearGradient>
+    <linearGradient id="cross-grad" x1="390" y1="290" x2="634" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E0E7FF" />
+    </linearGradient>
+    <linearGradient id="medic-grad" x1="510" y1="780" x2="800" y2="830" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+    <filter id="soft-shadow" x="180" y="110" width="664" height="680" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#4F46E5" flood-opacity="0.28" />
+    </filter>
+  </defs>
+
+  <!-- Square Canvas -->
+  <rect width="1024" height="1024" rx="180" fill="url(#bg-glow)" />
+  <rect x="18" y="18" width="988" height="988" rx="164" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="4" />
+
+  <!-- Subtle Cupertino Grid Rings -->
+  <circle cx="512" cy="430" r="290" stroke="#6366F1" stroke-opacity="0.12" stroke-width="2" stroke-dasharray="8 10" />
+  <circle cx="512" cy="430" r="230" stroke="#10B981" stroke-opacity="0.12" stroke-width="2" />
+
+  <!-- Precision Hex-Shield Emblem -->
+  <g filter="url(#soft-shadow)">
+    <path
+      d="M512 164L746 258V438C746 582 646 690 512 730C378 690 278 582 278 438V258L512 164Z"
+      fill="url(#shield-fill)"
+      stroke="url(#shield-stroke)"
+      stroke-width="22"
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <!-- Git Diff Circuit Connector Lines -->
+  <path d="M376 308L468 400M556 488L648 580" stroke="#818CF8" stroke-opacity="0.45" stroke-width="10" stroke-linecap="round" />
+
+  <!-- Surgical Patch Cross -->
+  <path
+    d="M474 306H550V402H646V478H550V574H474V478H378V402H474V306Z"
+    rx="14"
+    fill="url(#cross-grad)"
+  />
+
+  <!-- Git Commit / Verification Nodes -->
+  <circle cx="376" cy="304" r="28" fill="#818CF8" stroke="#0F111A" stroke-width="8" />
+  <circle cx="648" cy="576" r="32" fill="#10B981" stroke="#0F111A" stroke-width="8" />
+
+  <!-- Wordmark & Tagline -->
+  <text
+    x="512"
+    y="846"
+    text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif"
+    font-size="104"
+    font-weight="800"
+    letter-spacing="-3"
+  >
+    <tspan fill="#FFFFFF">Repo</tspan><tspan fill="url(#medic-grad)">Medic</tspan>
+  </text>
+
+  <text
+    x="512"
+    y="912"
+    text-anchor="middle"
+    font-family="'SF Mono', 'JetBrains Mono', Consolas, monospace"
+    font-size="28"
+    font-weight="600"
+    letter-spacing="8"
+    fill="#94A3B8"
+  >
+    DIAGNOSE · PATCH · PROVE
+  </text>
+</svg>
