@@ -15,9 +15,37 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://repomedic-eta.vercel.app'),
   title: 'RepoMedic — Diagnose. Patch. Prove.',
   description:
-    'Autonomous production incident investigator powered by NVIDIA Nemotron on Nebius Token Factory, isolated Vercel Sandbox verification, and approval-gated GitHub draft pull requests.',
+    'Autonomous production incident investigator powered by NVIDIA Nemotron on Nebius Token Factory, Nebius ConTree & Vercel Sandbox verification, LangSmith observability, and approval-gated GitHub draft pull requests.',
+  icons: {
+    icon: '/appimages/repomedic-logo-square.png',
+    apple: '/appimages/repomedic-logo-square.png',
+  },
+  openGraph: {
+    title: 'RepoMedic — Diagnose. Patch. Prove.',
+    description:
+      'Turn production exceptions into test-backed, security-audited draft pull requests with NVIDIA Nemotron, Nebius Token Factory Sandboxes, Vercel Sandbox, and LangSmith.',
+    url: 'https://repomedic-eta.vercel.app',
+    siteName: 'RepoMedic',
+    images: [
+      {
+        url: '/appimages/why_repo_medic.png',
+        width: 1536,
+        height: 1024,
+        alt: 'RepoMedic — Autonomous Closed-Loop Incident Investigator',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RepoMedic — Diagnose. Patch. Prove.',
+    description:
+      'Turn production exceptions into test-backed draft pull requests with NVIDIA Nemotron, Nebius Sandboxes, and LangSmith.',
+    images: ['/appimages/why_repo_medic.png'],
+  },
 };
 
 export default function RootLayout({

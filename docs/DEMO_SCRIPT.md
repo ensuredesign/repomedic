@@ -1,7 +1,7 @@
-# RepoMedic — Official 2-Minute (1:59.38) 1080p Demo Video Script & Judge Guide
+# RepoMedic — Official Smooth 1080p Demo Video Script & Judge Guide (`2:31`)
 
-- **Rendered 1080p Full HD MP4 (with Studio Voiceover, Ultra Keynote Visuals & Live Walkthrough):** [`/demo-assets/repomedic-hackathon-demo-2min.mp4`](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4) (`1920×1080`, `30fps`, `1:59.38`, zero bottom text captions)
-- **Track:** Coding and Agentic Engineering (Nebius × NVIDIA Global AI Hackathon)
+- **Rendered 1080p Full HD MP4 (Remotion 4.0 · Smooth Pixel-Locked Motion · Studio Voiceover):** [`/demo-assets/repomedic-hackathon-demo-2min.mp4`](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4) (`1920×1080`, `30fps`, `2m 31s`, `-16 LUFS` mastered audio, zero zoom jitter, zero bottom text captions)
+- **Track:** Coding and Agentic Engineering (**Nebius × NVIDIA Global AI Hackathon**)
 - **Maintainer:** `Ritesh Kochar / ensuredesign` (`ensure01@gmail.com`)
 
 ---
@@ -12,41 +12,34 @@ Judges can test every feature on [https://repomedic-eta.vercel.app/auth](https:/
 
 | Role | 1-Click Button on `/auth` | Account Email | Destination | What Judges Can Inspect |
 | :--- | :--- | :--- | :--- | :--- |
-| **Developer / Judge** | `1-Click User / Judge Login` | `judge@repomedic.dev` | `/app` & `/app/profile` | 3 live verified Nemotron + Vercel Sandbox runs, [Draft PR #4](https://github.com/ensuredesign/repomedic-fixture/pull/4), New Incident launcher, Profile Management |
+| **Developer / Judge** | `1-Click User / Judge Login` | `judge@repomedic.dev` | `/app` & `/app/profile` | 3 live verified Nemotron + Sandbox runs, Nebius ConTree CoW Verification, Public LangSmith Traces, [Draft PR #4](https://github.com/ensuredesign/repomedic-fixture/pull/4), New Incident launcher, Profile & Password Management |
 | **Platform Admin** | `1-Click Admin Panel Login` | `admin@repomedic.dev` | `/admin` | Full Admin Control Plane, User Directory, live RBAC role promotion/demotion (`admin_set_user_role`), Global Runs Audit Log, Token & Cost Telemetry |
-| **Guest (No Login)** | Open `/demo` | Anonymous (`is_demo=true`) | `/demo` | Curated read-only Case Study with Proof of Fix, Patch Security Audit, Attestation JSON export, and Resend Email Report |
+| **Guest (No Login)** | Open `/demo` | Anonymous (`is_demo=true`) | `/demo` | Curated read-only Case Study with Proof of Fix, 6-Gate Security Scanner, Nebius ConTree Sandbox, LangSmith Trace, SLSA-256 Attestation JSON, and Resend Email Report |
 
 ---
 
-## Segment Breakdown
+## 6-Chapter Remotion Film Beat Sheet (`0:00 – 2:31`)
 
-### 0:00 – 0:15 | The Hook: A Failing Repo, An Incident, A Verified Draft Fix
-- Show the RepoMedic landing page (`/`), styled with the **Genesis (`chef/genesis`)** design system and WCAG AA contrast tokens.
-- Highlight the core problem: LLM wrappers suggest unverified code; on-call engineers need deterministic proof that a minimal patch fixes the failing test in an isolated sandbox without breaking the suite or introducing security vulnerabilities.
+### Chapter 1 (`0:00 – 0:21`) — The 3:00 AM Production Triage Bottleneck
+- **Visual:** Ultra keynote visual (`scene1-problem.jpg`) + animated spring callout header (`CHAPTER 01 · THE PRODUCTION TRIAGE BOTTLENECK`).
+- **Narration:** Highlights why traditional AI coding assistants fail during 3:00 AM production incidents—guessing at code without reproducing failures or verifying test suites.
 
-### 0:15 – 0:45 | 1-Click Judge Login (`/auth`), Profile (`/app/profile`), & Admin Control Plane (`/admin`)
-- Open `/auth` and click **1-Click Admin Panel Login** (`admin@repomedic.dev`) to showcase the **Admin Control Plane (`/admin`)**:
-  - Live infrastructure health (Nebius Token Factory `nvidia/nemotron-3-super-120b-a12b`, Vercel Sandbox microVMs, Supabase Postgres + RLS, GitHub Allowlist `ensuredesign/repomedic-fixture`, Resend Email `RepoMedic <info@ensure.in>`).
-  - User Directory & RBAC role toggle (`developer` ↔ `admin`).
-  - Global Incident Runs & Token Telemetry table.
-- Click **Profile (`/app/profile`)** to show user profile management and personal investigation statistics.
+### Chapter 2 (`0:21 – 0:46`) — Enter RepoMedic: Diagnose. Patch. Prove.
+- **Visual:** Architecture vision (`scene2-idea.jpg`) + live Apple Cupertino landing page (`01-landing-hero.png`, `02-landing-workflow.png`).
+- **Narration:** Introduces RepoMedic's closed-loop philosophy: pin the commit SHA, reproduce `exit 1`, diagnose root cause, synthesize a surgical patch, prove `exit 0` in clean-room sandboxes, and gate GitHub Draft PRs behind cryptographic SHA-256 human sign-off.
 
-### 0:45 – 1:35 | Live Closed-Loop Execution (`/app/incidents/new`)
-- Navigate to `/app/incidents/new` and select **Preset #1** (`ensuredesign/repomedic-fixture @ 440255c3e1efe73a24d2cd92b90055c54c3e3549`), showing the failing B2B 0% tax-exempt regression in `src/pricing.ts`.
-- Click **Launch Live Investigation** and watch the persisted stage timeline advance:
-  1. `fetching`: Fetches allowlisted files at the pinned commit SHA.
-  2. `baseline_running`: Runs `npx vitest run` in an isolated Vercel Sandbox and records **Exit Code 1** (`1 failed | 7 passed`).
-  3. `investigating`: Calls **NVIDIA Nemotron** (`nvidia/nemotron-3-super-120b-a12b`) on Nebius Token Factory, isolating line 45 in `src/pricing.ts` (`taxRatePercent || defaultRatePercent`).
-  4. `patch_generating`: Generates a surgical 1-line edit replacing `||` with `??`.
+### Chapter 3 (`0:46 – 1:11`) — Full Partner Technology Stack
+- **Visual:** Technical stack blueprint (`scene3-tech-stack.jpg`) + core pillars (`02b-landing-pillars.png`).
+- **Narration:** Walks through **NVIDIA Nemotron 3 Super 120B** on **Nebius Token Factory**, **Nebius Token Factory Sandboxes (`contree-sdk`)**, **Vercel Sandbox**, **LangSmith (`smith.langchain.com`)**, **Tavily**, **Supabase Postgres + FORCE RLS**, and **Resend**.
 
-### 1:35 – 2:15 | Proof of Fix, Automated Patch Security Audit, & Attestation JSON
-- `patch_testing` completes with **Exit Code 0** (`8 passed | 0 failed`) in an isolated Vercel Sandbox microVM.
-- Inspect the **Proof of Fix** hero panel:
-  - Side-by-side Baseline (`Exit 1`) vs. Post-Patch (`Exit 0`) cards with durations and redacted logs.
-  - **Automated Patch Security & Blast-Radius Audit (`6/6 Checks Passed · 100/100 Surgical Score`)**: verifies zero dynamic code execution, zero shell spawning, zero secret literals, preserved test suite integrity, allowlisted source scope, and SHA-256 diff match.
-  - Click **Attestation JSON** to export the cryptographically hashed SLSA-style verification bundle, or click **Email Report** to send the Proof-of-Fix report via Resend (`RepoMedic <info@ensure.in>`).
+### Chapter 4 (`1:11 – 1:41`) — 1-Click Jury Access, Incident Ingestion & 5-Stage Pipeline
+- **Visual:** Stationary macOS Cupertino browser frames (`03-auth-portal.png` → `04-dashboard-command-center.png` → `05-new-incident-ingestion.png` → `06-proof-5stage-pipeline.png`).
+- **Narration:** Demonstrates 1-click judge login, multi-tenant RLS dashboard, pinned repository ingestion (`ensuredesign/repomedic-fixture`), and real-time stage progression.
 
-### 2:15 – 2:50 | SHA-256 Human Approval Gate & Idempotent GitHub Draft PR
-- Click **Review & Approve Draft PR** (`/app/incidents/[id]/review`).
-- Check the human confirmation box verifying the exact 64-character SHA-256 diff hash (`d2986c85dfb2f8926d4bbf0dec800dc27c2aacc3c4c79de6c5b739148632536c`).
-- Click **Approve Diff Hash & Create Draft PR** to open an idempotent GitHub **Draft** Pull Request ([Draft PR #4](https://github.com/ensuredesign/repomedic-fixture/pull/4)).
+### Chapter 5 (`1:41 – 2:12`) — Proof of Fix, 6-Gate Security Audit, Nebius ConTree & LangSmith
+- **Visual:** Proof of Fix diff & test transition (`07-proof-diff-and-sandbox.png` → `07b-security-scanner.png` → `08-proof-nebius-contree-sandbox.png` → `09-proof-langsmith-trace.png`).
+- **Narration:** Showcases the surgical 1-line nullish-coalescing fix (`||` → `??`), `exit 1 → exit 0` proof, `100/100` 6-gate security score, **Nebius ConTree** Copy-on-Write QR attestation, and **LangSmith** 6-span trace with 4 online evaluators.
+
+### Chapter 6 (`2:12 – 2:31`) — Nemotron Copilot, Admin Control Plane & Closing Impact
+- **Visual:** Interactive Copilot + Tavily grounding (`10-proof-copilot-and-tavily.png` → `11-admin-control-plane.png` → `scene6-impact.jpg`).
+- **Narration:** Demonstrates live Nemotron Copilot Q&A, Platform Admin RBAC Control Plane, and SHA-256 approval-gated GitHub Draft Pull Request creation—compressing MTTR from 45 minutes to 42 seconds.

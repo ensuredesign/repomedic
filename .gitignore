@@ -1,4 +1,8 @@
 node_modules/
+remotion-demo/node_modules/
+remotion-demo/public/
+remotion-demo/out/
+public/demo-assets/audio/
 .next/
 .vercel/
 .env

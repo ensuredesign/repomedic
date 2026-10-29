@@ -1,0 +1,25 @@
+{
+  "name": "repomedic-remotion-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render src/index.ts RepoMedicDemo ../public/demo-assets/repomedic-hackathon-demo-2min.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.286",
+    "@remotion/transitions": "4.0.286",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.286"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

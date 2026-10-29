@@ -12,7 +12,7 @@ CHAPTERS = [
     {
         "id": "chapter1",
         "title": "Problem Statement",
-        "rate": "+8%",
+        "rate": "+0%",
         "text": (
             "When a critical exception hits production at three A.M., engineering teams face a forty-five minute bottleneck. "
             "Developers scramble to reproduce the exact failing commit and isolate edge-case bugs, "
@@ -22,7 +22,7 @@ CHAPTERS = [
     {
         "id": "chapter2",
         "title": "The Idea: RepoMedic",
-        "rate": "+8%",
+        "rate": "+0%",
         "text": (
             "Meet RepoMedic: Diagnose. Patch. Prove. "
             "RepoMedic is an autonomous, closed-loop production incident investigator. "
@@ -33,7 +33,7 @@ CHAPTERS = [
     {
         "id": "chapter3",
         "title": "Technologies Used",
-        "rate": "+8%",
+        "rate": "+0%",
         "text": (
             "RepoMedic is powered by NVIDIA Nemotron Three Super One-Twenty-B on Nebius Token Factory across four reasoning stages. "
             "It integrates Nebius Token Factory Sandboxes via the ConTree Copy-on-Write SDK, Vercel Sandbox micro-VMs, "
@@ -43,7 +43,7 @@ CHAPTERS = [
     {
         "id": "chapter4",
         "title": "Live App Walkthrough: Triage & Proof of Fix",
-        "rate": "+8%",
+        "rate": "+0%",
         "text": (
             "Inside the Apple Cupertino-inspired interface, judges sign in with one click or register with automated Resend welcome emails. "
             "Inspecting a B2B checkout bug where a zero-percent tax rate was overridden by an eight-point-five percent default, "
@@ -53,7 +53,7 @@ CHAPTERS = [
     {
         "id": "chapter5",
         "title": "Nebius Sandboxes, LangSmith & Co-Pilot",
-        "rate": "+8%",
+        "rate": "+0%",
         "text": (
             "Every patch passes a six-check static security and blast-radius scanner scoring one hundred out of one hundred. "
             "With one click, RepoMedic runs a three-step Copy-on-Write container verification in Nebius Token Factory Sandboxes with ANSI QR attestation, "
@@ -63,7 +63,7 @@ CHAPTERS = [
     {
         "id": "chapter6",
         "title": "How RepoMedic Solves the Problem & Impact",
-        "rate": "+8%",
+        "rate": "+0%",
         "text": (
             "Finally, RepoMedic enforces a cryptographic SHA-256 human approval gate before opening an idempotent GitHub Draft Pull Request, "
             "while admins monitor global Nebius telemetry and RBAC in the Admin Control Plane. "

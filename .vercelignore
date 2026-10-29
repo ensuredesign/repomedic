@@ -1,0 +1,6 @@
+node_modules/
+remotion-demo/
+public/demo-assets/audio/
+playwright-report/
+test-results/
+coverage/
