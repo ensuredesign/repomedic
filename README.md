@@ -5,6 +5,7 @@
 > **Pitch:** RepoMedic turns production exceptions into test-backed, security-audited draft pull requests—with every NVIDIA Nemotron decision, isolated Vercel Sandbox test run, and cryptographic SHA-256 verification step visible.
 
 - **Live Production Deployment (Vercel):** [https://repomedic-eta.vercel.app](https://repomedic-eta.vercel.app)
+- **Official 2-Minute 1080p Hackathon Demo Video (MP4 with Voiceover & Walkthrough):** [https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4)
 - **1-Click Hackathon Demo Login (Admin & Developer/Judge):** [https://repomedic-eta.vercel.app/auth](https://repomedic-eta.vercel.app/auth)
 - **Live Interactive Case Study (`/demo`):** [https://repomedic-eta.vercel.app/demo](https://repomedic-eta.vercel.app/demo)
 - **Live Admin Control Plane (`/admin`):** [https://repomedic-eta.vercel.app/admin](https://repomedic-eta.vercel.app/admin)

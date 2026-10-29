@@ -1,8 +1,8 @@
-# RepoMedic — <3-Minute Demo Video Script & Judge Guide
+# RepoMedic — Official 2-Minute (1:59.38) 1080p Demo Video Script & Judge Guide
 
-**Target Length:** 2:35 – 2:50  
-**Track:** Coding and Agentic Engineering (Nebius × NVIDIA Global AI Hackathon)  
-**Maintainer:** `ensuredesign` (`ensure01@gmail.com`)
+- **Rendered 1080p Full HD MP4 (with Studio Voiceover, Ultra Keynote Visuals & Live Walkthrough):** [`/demo-assets/repomedic-hackathon-demo-2min.mp4`](https://repomedic-eta.vercel.app/demo-assets/repomedic-hackathon-demo-2min.mp4) (`1920×1080`, `30fps`, `1:59.38`, zero bottom text captions)
+- **Track:** Coding and Agentic Engineering (Nebius × NVIDIA Global AI Hackathon)
+- **Maintainer:** `Ritesh Kochar / ensuredesign` (`ensure01@gmail.com`)
 
 ---
 

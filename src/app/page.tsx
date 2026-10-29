@@ -60,6 +60,48 @@ export default function LandingPage() {
             {/* Apple Cupertino Silicon + Activity Ring + Pipeline Benchmark Showcase */}
             <AppleBentoHeroShowcase />
 
+            {/* 2-Minute Official Hackathon Product Film Theater */}
+            <div
+              id="hackathon-demo-video-theater"
+              className="mt-10 rounded-[24px] border border-black/[0.08] bg-[#1D1D1F] p-5 sm:p-7 text-white shadow-[0_24px_60px_rgba(0,0,0,0.16)]"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-[#30D158]/15 border border-[#30D158]/40 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#30D158]">
+                      OFFICIAL 2-MINUTE HACKATHON FILM · 1080P HD
+                    </span>
+                    <span className="font-mono text-[11px] text-white/60">
+                      Problem → Idea → Nebius + NVIDIA + ConTree + LangSmith → Live Walkthrough
+                    </span>
+                  </div>
+                  <h2 className="mt-1.5 text-[20px] sm:text-[24px] font-bold tracking-[-0.025em] text-white font-display">
+                    Watch RepoMedic in Action (2:00 Walkthrough with Voiceover)
+                  </h2>
+                </div>
+                <a
+                  href="/demo-assets/repomedic-hackathon-demo-2min.mp4"
+                  download="repomedic-hackathon-demo-2min.mp4"
+                  className="inline-flex h-[38px] items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 px-4 text-[12px] font-medium text-white transition-colors"
+                >
+                  <span>Download 1080p MP4 (2:00)</span>
+                </a>
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-[16px] border border-white/10 bg-black">
+                <video
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/demo-assets/slides/scene2-idea.jpg"
+                  className="w-full aspect-video object-cover"
+                >
+                  <source src="/demo-assets/repomedic-hackathon-demo-2min.mp4" type="video/mp4" />
+                  Your browser does not support HTML5 video.
+                </video>
+              </div>
+            </div>
+
             {/* Technology & Governance Strip */}
             <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <div className="genesis-card genesis-card-interactive p-5">
