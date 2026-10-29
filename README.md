@@ -33,8 +33,9 @@ On [https://repomedic-eta.vercel.app/auth](https://repomedic-eta.vercel.app/auth
 
 1. **Direct NVIDIA Nemotron Inference on Nebius Token Factory:**
    - Connects directly to `https://api.tokenfactory.us-central1.nebius.com/v1/` (`nvidia/nemotron-3-super-120b-a12b`) with strict Zod-validated structured outputs (`DiagnosisSchema`, `PatchProposalSchema`, `HealthSmokeSchema`).
-2. **Isolated Before/After Verification (`@vercel/sandbox`):**
-   - Executes baseline tests on the unmodified pinned SHA and post-patch tests in ephemeral Node 22 microVMs (`pnpm install --ignore-scripts` + `npx vitest run`). A patch is marked **Verified** only when baseline fails (`exitCode !== 0`) and post-patch passes (`exitCode === 0`) on the identical command.
+2. **Nebius Token Factory Sandboxes (Beta) (`contree-sdk`) + Vercel Sandbox Verification:**
+   - **Nebius Token Factory Sandboxes (`https://api.tokenfactory.nebius.com/sandboxes/v1`, Project `aiproject-e00am2xdmcyzgvf9s5`):** Spawns Copy-on-Write (`CoW`) container sessions from `python:3.12-slim`, dynamically installs system dependencies (`apt-get update -q && apt-get install -y qrencode`), executes model-generated Python patch invariant verification, and renders an ANSI UTF-8 QR attestation code (`scripts/nebius_contree_sandbox_demo.py`, `src/lib/sandbox/nebius-contree.ts`, `/api/runs/[id]/nebius-sandbox`).
+   - **Vercel Sandbox (`@vercel/sandbox`):** Executes baseline tests on the unmodified pinned SHA and post-patch tests in ephemeral Node 22 microVMs (`pnpm install --ignore-scripts` + `npx vitest run`). A patch is marked **Verified** only when baseline fails (`exitCode !== 0`) and post-patch passes (`exitCode === 0`) on the identical command.
 3. **Automated Patch Security & Blast-Radius Scanner (`src/lib/security/patch-scanner.ts`):**
    - Every candidate patch is audited across 6 static security guardrails (`NO_DYNAMIC_CODE_EXEC`, `NO_SHELL_INJECTION`, `NO_SECRET_LITERALS`, `NO_TEST_TAMPERING`, `NO_DEPENDENCY_DRIFT`, `CRYPTOGRAPHIC_DIFF_INTEGRITY`) and assigned a **0–100 Surgical Precision Score**.
 4. **Cryptographic SLSA-Style Attestation JSON (`/api/runs/[id]/attestation`):**

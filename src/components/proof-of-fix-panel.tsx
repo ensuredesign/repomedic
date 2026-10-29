@@ -24,6 +24,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { AppleProofTelemetryStrip } from '@/components/apple-telemetry-charts';
+import type { NebiusContreeExecutionResult } from '@/lib/sandbox/nebius-contree';
 import { analyzePatchSecurityAndBlastRadius } from '@/lib/security/patch-scanner';
 import type { CompleteRunBundle } from '@/lib/supabase/types';
 
@@ -102,6 +103,8 @@ export function ProofOfFixPanel({
   const [copilotOutput, setCopilotOutput] = useState<CopilotSynthesis | null>(null);
   const [copilotTelemetry, setCopilotTelemetry] = useState<CopilotTelemetry | null>(null);
   const [copilotError, setCopilotError] = useState<string | null>(null);
+  const [nebiusSandbox, setNebiusSandbox] = useState<NebiusContreeExecutionResult | null>(null);
+  const [nebiusSandboxLoading, setNebiusSandboxLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -118,10 +121,42 @@ export function ProofOfFixPanel({
       .catch(() => {
         // Ignore background memory recall error
       });
+
+    fetch(`/api/runs/${run.id}/nebius-sandbox`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data?.nebiusSandbox) {
+          setNebiusSandbox(data.nebiusSandbox);
+        }
+      })
+      .catch(() => {
+        // Ignore background nebius sandbox preview fetch error
+      });
+
     return () => {
       active = false;
     };
   }, [run.id]);
+
+  async function handleRunNebiusSandbox() {
+    if (nebiusSandboxLoading) return;
+    setNebiusSandboxLoading(true);
+    try {
+      const res = await fetch(`/api/runs/${run.id}/nebius-sandbox`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUrl: 'https://tokenfactory.nebius.com' }),
+      });
+      const data = await res.json();
+      if (data?.nebiusSandbox) {
+        setNebiusSandbox(data.nebiusSandbox);
+      }
+    } catch {
+      // Ignore error
+    } finally {
+      setNebiusSandboxLoading(false);
+    }
+  }
 
   async function runCopilotWorkflow(
     workflow:
@@ -757,6 +792,157 @@ export function ProofOfFixPanel({
               : `${latestCandidateTest?.stdout_excerpt || ''}\n${latestCandidateTest?.stderr_excerpt || ''}`.trim() ||
                 'No post-patch log output recorded yet.'}
           </pre>
+        </div>
+      )}
+
+      {/* Nebius Token Factory Sandboxes (Beta) · ConTree Copy-on-Write Verification & QR Attestation */}
+      {nebiusSandbox && (
+        <div
+          id="nebius-sandbox-section"
+          className="border-t border-[#E8E8EC] bg-[#FFFFFF] px-4 py-5 sm:px-5 space-y-4"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#1D1D1F] text-[#30D158] border border-black/10">
+                <Cpu className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-[16px] font-bold text-[#1D1D1F] font-display">
+                    Nebius Token Factory Sandboxes (Beta) · ConTree Copy-on-Write Runner
+                  </h3>
+                  <span className="rounded-full border border-[#34C759]/30 bg-[#34C759]/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-[#15803D]">
+                    {nebiusSandbox.liveExecuted ? 'LIVE CONTREE-SDK EXECUTION' : 'CONTREE-SDK READY'}
+                  </span>
+                  <span className="rounded-full border border-black/[0.08] bg-[#F5F5F7] px-2.5 py-0.5 font-mono text-[10px] text-[#6E6E73]">
+                    Project: {nebiusSandbox.projectId}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[13px] text-[#6E6E73]">
+                  Spawns a stateful Copy-on-Write container session from{' '}
+                  <code className="font-mono text-[#1D1D1F]">{nebiusSandbox.baseImage}</code> on{' '}
+                  <code className="font-mono text-[#0071E3]">{nebiusSandbox.endpointUrl}</code>,
+                  installs <code className="font-mono text-[#1D1D1F]">qrencode</code> via{' '}
+                  <code className="font-mono text-[#1D1D1F]">apt-get</code>, verifies RepoMedic
+                  patch invariants, and renders an ANSI UTF-8 attestation QR code.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href="https://docs.tokenfactory.nebius.com/sandboxes/overview"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/[0.08] bg-[#F5F5F7] px-3.5 py-1.5 text-[12px] font-medium text-[#1D1D1F] hover:border-[#0071E3] transition-colors"
+              >
+                <span>Nebius Sandbox Docs</span>
+                <ExternalLink className="h-3.5 w-3.5 text-[#0071E3]" aria-hidden="true" />
+              </a>
+              <button
+                id="run-nebius-sandbox-btn"
+                type="button"
+                disabled={nebiusSandboxLoading}
+                onClick={handleRunNebiusSandbox}
+                className="genesis-btn-primary inline-flex min-h-[36px] items-center gap-1.5 px-4 py-1.5 text-[12px] disabled:opacity-50"
+              >
+                {nebiusSandboxLoading ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                <span>
+                  {nebiusSandboxLoading
+                    ? 'Running in Nebius Sandbox…'
+                    : 'Run Live in Nebius Sandbox (contree-sdk)'}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3-Step Copy-on-Write Container Layer Chain */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            {nebiusSandbox.steps.map((step) => (
+              <div
+                key={step.stepNumber}
+                className="rounded-[12px] border border-black/[0.07] bg-[#F5F5F7] p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-[#0071E3]">
+                    STEP {step.stepNumber} · COW LAYER
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold ${
+                      step.exitCode === 0
+                        ? 'bg-[#ECFDF5] text-[#15803D] border border-[#34C759]/30'
+                        : 'bg-[#FEF2F2] text-[#B91C1C] border border-[#EF4444]/30'
+                    }`}
+                  >
+                    exit {step.exitCode} · {step.elapsedMs}ms
+                  </span>
+                </div>
+                <div className="mt-1 font-mono text-[11px] font-semibold text-[#1D1D1F] truncate">
+                  {step.command} {step.args.slice(0, 3).join(' ')}
+                </div>
+                <div className="mt-1.5 flex items-center justify-between font-mono text-[10px] text-[#6E6E73]">
+                  <span className="truncate">
+                    op: {step.operationUuid.slice(0, 14)}
+                  </span>
+                  <span>RSS {(step.maxRssKb / 1024).toFixed(1)} MB</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Side-by-Side Python contree-sdk Code & Live ANSI UTF-8 QR Attestation Terminal */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="rounded-[14px] border border-black/[0.08] bg-[#FAFAFA] p-3.5">
+              <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-black/[0.06]">
+                <span className="font-mono text-[11px] font-semibold text-[#1D1D1F]">
+                  Python SDK (contree-sdk · scripts/nebius_contree_sandbox_demo.py)
+                </span>
+                <span className="font-mono text-[10px] text-[#0071E3]">
+                  pip install contree-sdk
+                </span>
+              </div>
+              <pre className="overflow-x-auto font-mono text-[11px] leading-relaxed text-[#1D1D1F] whitespace-pre-wrap">
+                {`from contree_sdk import ContreeSync
+
+client = ContreeSync()
+sandbox = client.images.use("python:3.12-slim").session()
+
+# Install system tool in persistent Copy-on-Write layers
+sandbox.run("apt-get", args=["update", "-q"], disposable=False).wait()
+sandbox.run("apt-get", args=["install", "-y", "qrencode"], disposable=False).wait()
+
+generated_code = """
+import subprocess
+qr = subprocess.run(
+    ["qrencode", "-t", "ANSIUTF8", "https://tokenfactory.nebius.com"],
+    capture_output=True, text=True,
+)
+print(qr.stdout)
+"""
+result = sandbox.run("python", args=["-c", generated_code]).wait()
+print(result.stdout)`}
+              </pre>
+            </div>
+
+            <div className="rounded-[14px] border border-black/15 bg-[#1D1D1F] p-3.5 text-white">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-white/10">
+                <span className="font-mono text-[11px] font-semibold text-[#30D158]">
+                  NEBIUS SANDBOX STDOUT · ANSI UTF-8 QR ATTESTATION
+                </span>
+                <span className="font-mono text-[10px] text-white/60">
+                  Total: {nebiusSandbox.totalDurationMs}ms · Image:{' '}
+                  {(nebiusSandbox.finalImageUuid ?? nebiusSandbox.baseImage).slice(0, 14)}
+                </span>
+              </div>
+              <pre className="max-h-64 overflow-auto font-mono text-[9.5px] leading-[1.08] text-[#F5F5F7] whitespace-pre">
+                {nebiusSandbox.stdout}
+              </pre>
+            </div>
+          </div>
         </div>
       )}
 

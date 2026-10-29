@@ -76,13 +76,13 @@ export default function LandingPage() {
 
               <div className="genesis-card genesis-card-interactive p-5">
                 <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#047857]">
-                  Isolated Runner
+                  Isolated Sandboxes
                 </div>
                 <div className="mt-1.5 text-[16px] font-bold text-[#0A0A0A] font-display">
-                  Vercel Sandbox SDK
+                  Nebius Sandboxes + Vercel
                 </div>
                 <div className="mt-1 text-[13px] text-[#52525B] leading-relaxed">
-                  Ephemeral microVMs for baseline red &amp; patched green proofs
+                  Nebius Token Factory Sandboxes (`contree-sdk`) Copy-on-Write layers &amp; microVMs
                 </div>
               </div>
 
@@ -272,12 +272,11 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <h3 className="text-[16px] font-bold text-[#0A0A0A] font-display">
-                  Multi-Call Nebius + NVIDIA Nemotron
+                  Nebius Nemotron + Nebius Sandboxes
                 </h3>
                 <p className="text-[13px] text-[#52525B] leading-relaxed">
                   Powered by <code className="font-mono text-[11px]">nvidia/nemotron-3-super-120b-a12b</code> on
-                  Nebius Token Factory across 4 distinct agent stages: root-cause localization,
-                  surgical patch synthesis, failure reflection retry, and interactive SRE Co-Pilot.
+                  Nebius Token Factory plus <strong>Nebius Token Factory Sandboxes (Beta)</strong> (<code className="font-mono text-[11px]">contree-sdk</code>) for Copy-on-Write container package installation, invariant checks, and QR attestation.
                 </p>
               </div>
 

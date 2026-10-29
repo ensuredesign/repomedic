@@ -4,6 +4,7 @@ import {
   verifyNebiusModelCatalog,
 } from '@/lib/ai/nebius';
 import { fetchPinnedRepositorySlice } from '@/lib/github/client';
+import { executeLiveNebiusContreeSandbox } from '@/lib/sandbox/nebius-contree';
 import { runTestsInVercelSandbox } from '@/lib/sandbox/runner';
 
 describe('M1 & M2 Live Integration Gate — Nebius Nemotron, GitHub Pinned Read, and Vercel Sandbox', () => {
@@ -56,4 +57,36 @@ describe('M1 & M2 Live Integration Gate — Nebius Nemotron, GitHub Pinned Read,
     expect(sandboxResult.failed).toBe(1);
     expect(sandboxResult.passed).toBe(7);
   });
+
+  it('3. executes live Nebius Token Factory Sandboxes (contree-sdk protocol) with apt-get qrencode and Python subprocess', async () => {
+    const nebiusSandbox = await executeLiveNebiusContreeSandbox({
+      runId: 'e1000000-0000-4000-8000-000000000002',
+      incidentTitle: 'Zero percent tax rate overridden by default 8.5% rate on B2B tax-exempt orders',
+      diffSha256: 'd2986c85dfb28d1a8a4b211f1d8c22949d6e4c198f73f5b2069f9d60ef5984ab',
+      targetUrl: 'https://tokenfactory.nebius.com',
+      forceFullRebuild: false,
+    });
+
+    console.log('Live Nebius Token Factory Sandbox (ConTree) Result:', {
+      liveExecuted: nebiusSandbox.liveExecuted,
+      error: nebiusSandbox.error,
+      exitCode: nebiusSandbox.exitCode,
+      totalDurationMs: nebiusSandbox.totalDurationMs,
+      finalImageUuid: nebiusSandbox.finalImageUuid,
+      steps: nebiusSandbox.steps.map((s) => ({
+        stepNumber: s.stepNumber,
+        label: s.label,
+        exitCode: s.exitCode,
+        elapsedMs: s.elapsedMs,
+        operationUuid: s.operationUuid,
+      })),
+    });
+
+    expect(nebiusSandbox.configured).toBe(true);
+    expect(nebiusSandbox.liveExecuted).toBe(true);
+    expect(nebiusSandbox.exitCode).toBe(0);
+    expect(nebiusSandbox.steps.length).toBe(3);
+    expect(nebiusSandbox.qrCodeAnsi).toContain('████');
+    expect(nebiusSandbox.stdout).toContain('NEBIUS_SANDBOX_PATCH_VERIFICATION: PASS');
+  }, 180000);
 });
