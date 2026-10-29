@@ -272,11 +272,11 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <h3 className="text-[16px] font-bold text-[#0A0A0A] font-display">
-                  Nebius Nemotron + Nebius Sandboxes
+                  Nebius + Sandboxes + LangSmith
                 </h3>
                 <p className="text-[13px] text-[#52525B] leading-relaxed">
                   Powered by <code className="font-mono text-[11px]">nvidia/nemotron-3-super-120b-a12b</code> on
-                  Nebius Token Factory plus <strong>Nebius Token Factory Sandboxes (Beta)</strong> (<code className="font-mono text-[11px]">contree-sdk</code>) for Copy-on-Write container package installation, invariant checks, and QR attestation.
+                  Nebius Token Factory, <strong>Nebius Token Factory Sandboxes (Beta)</strong> (<code className="font-mono text-[11px]">contree-sdk</code>), and <strong>LangSmith</strong> (<code className="font-mono text-[11px]">smith.langchain.com</code>) 6-span trace trees &amp; online evaluators.
                 </p>
               </div>
 

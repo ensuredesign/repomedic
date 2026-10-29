@@ -24,6 +24,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { AppleProofTelemetryStrip } from '@/components/apple-telemetry-charts';
+import type { LangSmithTraceResult } from '@/lib/observability/langsmith';
 import type { NebiusContreeExecutionResult } from '@/lib/sandbox/nebius-contree';
 import { analyzePatchSecurityAndBlastRadius } from '@/lib/security/patch-scanner';
 import type { CompleteRunBundle } from '@/lib/supabase/types';
@@ -105,6 +106,8 @@ export function ProofOfFixPanel({
   const [copilotError, setCopilotError] = useState<string | null>(null);
   const [nebiusSandbox, setNebiusSandbox] = useState<NebiusContreeExecutionResult | null>(null);
   const [nebiusSandboxLoading, setNebiusSandboxLoading] = useState(false);
+  const [langsmithTrace, setLangsmithTrace] = useState<LangSmithTraceResult | null>(null);
+  const [langsmithLoading, setLangsmithLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -125,12 +128,23 @@ export function ProofOfFixPanel({
     fetch(`/api/runs/${run.id}/nebius-sandbox`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (active && data?.nebiusSandbox) {
-          setNebiusSandbox(data.nebiusSandbox);
+        if (active && (data?.nebiusSandbox || data?.sandbox)) {
+          setNebiusSandbox(data.nebiusSandbox || data.sandbox);
         }
       })
       .catch(() => {
         // Ignore background nebius sandbox preview fetch error
+      });
+
+    fetch(`/api/runs/${run.id}/langsmith`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data?.langsmith) {
+          setLangsmithTrace(data.langsmith);
+        }
+      })
+      .catch(() => {
+        // Ignore background langsmith preview fetch error
       });
 
     return () => {
@@ -148,13 +162,32 @@ export function ProofOfFixPanel({
         body: JSON.stringify({ targetUrl: 'https://tokenfactory.nebius.com' }),
       });
       const data = await res.json();
-      if (data?.nebiusSandbox) {
-        setNebiusSandbox(data.nebiusSandbox);
+      if (data?.nebiusSandbox || data?.sandbox) {
+        setNebiusSandbox(data.nebiusSandbox || data.sandbox);
       }
     } catch {
       // Ignore error
     } finally {
       setNebiusSandboxLoading(false);
+    }
+  }
+
+  async function handleSyncLangSmithTrace() {
+    if (langsmithLoading) return;
+    setLangsmithLoading(true);
+    try {
+      const res = await fetch(`/api/runs/${run.id}/langsmith`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data?.langsmith) {
+        setLangsmithTrace(data.langsmith);
+      }
+    } catch {
+      // Ignore error
+    } finally {
+      setLangsmithLoading(false);
     }
   }
 
@@ -941,6 +974,148 @@ print(result.stdout)`}
               <pre className="max-h-64 overflow-auto font-mono text-[9.5px] leading-[1.08] text-[#F5F5F7] whitespace-pre">
                 {nebiusSandbox.stdout}
               </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LangSmith (smith.langchain.com) Multi-Step Agent Trace Tree & Online Evaluator Suite */}
+      {langsmithTrace && (
+        <div
+          id="langsmith-trace-section"
+          className="border-t border-[#E8E8EC] bg-[#FAFAFA] px-4 py-5 sm:px-5 space-y-4"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#0071E3]/10 text-[#0071E3] border border-[#0071E3]/25">
+                <BrainCircuit className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-[16px] font-bold text-[#1D1D1F] font-display">
+                    LangSmith Agent Observability · Multi-Step Trace Tree &amp; Online Evaluators
+                  </h3>
+                  <span className="rounded-full border border-[#0071E3]/30 bg-[#0071E3]/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-[#0071E3]">
+                    {langsmithTrace.liveSynced ? 'LIVE SYNCED ON SMITH.LANGCHAIN.COM' : 'LANGSMITH TRACE READY'}
+                  </span>
+                  <span className="rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 font-mono text-[10px] text-[#6E6E73]">
+                    Project: {langsmithTrace.projectName}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[13px] text-[#6E6E73]">
+                  Streams the full 6-node hierarchical execution graph (<code className="font-mono text-[#1D1D1F]">chain → retriever → tool → llm → tool → chain</code>) and 4 automated online evaluator scores to{' '}
+                  <code className="font-mono text-[#0071E3]">https://api.smith.langchain.com</code>.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                id="open-langsmith-public-trace-link"
+                href={langsmithTrace.publicShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3.5 py-1.5 text-[12px] font-medium text-[#1D1D1F] hover:border-[#0071E3] transition-colors"
+              >
+                <span>Open Public LangSmith Trace</span>
+                <ExternalLink className="h-3.5 w-3.5 text-[#0071E3]" aria-hidden="true" />
+              </a>
+              <button
+                id="sync-langsmith-trace-btn"
+                type="button"
+                disabled={langsmithLoading}
+                onClick={handleSyncLangSmithTrace}
+                className="genesis-btn-primary inline-flex min-h-[36px] items-center gap-1.5 px-4 py-1.5 text-[12px] disabled:opacity-50"
+              >
+                {langsmithLoading ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                <span>
+                  {langsmithLoading
+                    ? 'Syncing to LangSmith…'
+                    : 'Sync & Evaluate Live on LangSmith'}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Online LangSmith Evaluator Feedback Scores */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            {langsmithTrace.feedbackMetrics.map((metric) => (
+              <div
+                key={metric.key}
+                className="rounded-[12px] border border-black/[0.07] bg-white p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.05em] text-[#6E6E73] truncate">
+                    {metric.key}
+                  </span>
+                  <span className="rounded-full bg-[#ECFDF5] border border-[#34C759]/30 px-2 py-0.5 font-mono text-[11px] font-bold text-[#15803D]">
+                    {metric.score.toFixed(2)}
+                  </span>
+                </div>
+                <div className="mt-1 text-[12px] font-semibold text-[#1D1D1F]">
+                  {metric.label}
+                </div>
+                <p className="mt-0.5 text-[11px] text-[#6E6E73] line-clamp-2">
+                  {metric.comment}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Hierarchical 6-Node LangSmith Trace Waterfall */}
+          <div className="rounded-[14px] border border-black/[0.08] bg-white p-3.5 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-black/[0.06] font-mono text-[11px]">
+              <span className="font-semibold text-[#1D1D1F]">
+                HIERARCHICAL AGENT TRACE TREE · ROOT ID: {langsmithTrace.rootTraceId.slice(0, 18)}…
+              </span>
+              <span className="text-[#0071E3]">
+                {langsmithTrace.spans.length} Spans · {langsmithTrace.endpointUrl}
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              {langsmithTrace.spans.map((span, idx) => (
+                <div
+                  key={span.spanId}
+                  className={`flex flex-wrap items-center justify-between gap-2 rounded-[8px] px-3 py-2 text-[12px] ${
+                    idx === 0
+                      ? 'bg-[#1D1D1F] text-white font-semibold'
+                      : 'bg-[#F5F5F7] text-[#1D1D1F] ml-3 sm:ml-6 border border-black/[0.05]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={`rounded px-1.5 py-0.5 font-mono text-[10px] uppercase font-bold ${
+                        span.runType === 'llm'
+                          ? 'bg-[#AF52DE]/20 text-[#AF52DE]'
+                          : span.runType === 'tool'
+                            ? 'bg-[#34C759]/20 text-[#15803D]'
+                            : span.runType === 'retriever'
+                              ? 'bg-[#0071E3]/20 text-[#0071E3]'
+                              : idx === 0
+                                ? 'bg-white/15 text-[#30D158]'
+                                : 'bg-black/[0.06] text-[#6E6E73]'
+                      }`}
+                    >
+                      {span.runType}
+                    </span>
+                    <span className="truncate font-medium">{span.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono text-[11px] shrink-0">
+                    <span className={idx === 0 ? 'text-white/75 hidden md:inline' : 'text-[#6E6E73] hidden md:inline'}>
+                      {span.summary.slice(0, 68)}
+                      {span.summary.length > 68 ? '…' : ''}
+                    </span>
+                    <span className={idx === 0 ? 'text-[#30D158]' : 'text-[#1D1D1F] font-semibold'}>
+                      {span.latencyMs}ms
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -44,6 +44,8 @@ On [https://repomedic-eta.vercel.app/auth](https://repomedic-eta.vercel.app/auth
    - 8 normalized tables (`profiles`, `incidents`, `runs`, `run_events`, `patches`, `test_results`, `approvals`, `pull_requests`) with `FORCE ROW LEVEL SECURITY`, atomic stage leases (`claim_run_stage`), user profile management (`/app/profile`), and PostgreSQL trigger protection against privilege self-escalation (`guard_profile_role_update`).
 6. **SHA-256 Approval-Gated GitHub Draft PRs + Opt-In Resend Email Reports:**
    - Zero autonomous GitHub writes. Only after a human approves the exact 64-char SHA-256 diff hash does RepoMedic create branch `repomedic/fix-<run-short-id>` and open an idempotent **Draft** PR, with optional Proof-of-Fix email delivery via **Resend** (`RepoMedic <info@ensure.in>`).
+7. **LangSmith Agent Observability & Online Evaluators (`smith.langchain.com`):**
+   - Streams 6-span hierarchical agent trace trees (`chain → retriever → tool → llm → tool → chain`), 4 automated online evaluator feedback scores (`sandbox_verification_pass`, `security_blast_radius_score`, `nemotron_diagnosis_confidence`, `mttr_compression_ratio`), and 1-click public shareable trace links ([Sample Public 6-Span LangSmith Trace](https://smith.langchain.com/public/713f43a3-9410-403e-8d0c-4e22bb213548/r)) into LangSmith project `RepoMedic-Nebius-NVIDIA-Hackathon` (`src/lib/observability/langsmith.ts`, `/api/runs/[id]/langsmith`).
 
 ---
 

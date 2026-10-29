@@ -24,7 +24,13 @@ export async function GET(
       .maybeSingle(),
   ]);
 
-  if (!runRes.data) {
+  const anonClient = createSupabaseAnonServerClient();
+  const runRow =
+    runRes.data ??
+    (await anonClient.from('runs').select('id, incident_id, is_demo').eq('id', runId).maybeSingle())
+      .data;
+
+  if (!runRow) {
     return apiErrorResponse(404, 'RUN_NOT_FOUND', 'Run not found.');
   }
 
@@ -39,12 +45,13 @@ export async function GET(
     diffSha256:
       patchRes.data?.diff_sha256 ||
       'd2986c85dfb2f8926d4bbf0dec800dc27c2aacc3c4c79de6c5b739148632536c',
-    targetUrl: runRes.data.is_demo ? 'https://tokenfactory.nebius.com' : `${origin}/app/incidents/${runId}`,
+    targetUrl: runRow.is_demo ? 'https://tokenfactory.nebius.com' : `${origin}/app/incidents/${runId}`,
   });
 
   return NextResponse.json({
     ok: true,
     sandbox: preview,
+    nebiusSandbox: preview,
   });
 }
 
@@ -126,5 +133,6 @@ export async function POST(
   return NextResponse.json({
     ok: true,
     sandbox: result,
+    nebiusSandbox: result,
   });
 }

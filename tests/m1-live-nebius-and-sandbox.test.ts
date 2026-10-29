@@ -4,8 +4,11 @@ import {
   verifyNebiusModelCatalog,
 } from '@/lib/ai/nebius';
 import { fetchPinnedRepositorySlice } from '@/lib/github/client';
+import { syncAndShareRunBundleToLangSmith } from '@/lib/observability/langsmith';
 import { executeLiveNebiusContreeSandbox } from '@/lib/sandbox/nebius-contree';
 import { runTestsInVercelSandbox } from '@/lib/sandbox/runner';
+import { loadRunBundle } from '@/lib/supabase/bundle';
+import { createSupabaseAnonServerClient } from '@/lib/supabase/server';
 
 describe('M1 & M2 Live Integration Gate — Nebius Nemotron, GitHub Pinned Read, and Vercel Sandbox', () => {
   it('1. verifies Nebius Token Factory /models catalog and executes live NVIDIA Nemotron structured inference', async () => {
@@ -89,4 +92,35 @@ describe('M1 & M2 Live Integration Gate — Nebius Nemotron, GitHub Pinned Read,
     expect(nebiusSandbox.qrCodeAnsi).toContain('████');
     expect(nebiusSandbox.stdout).toContain('NEBIUS_SANDBOX_PATCH_VERIFICATION: PASS');
   }, 180000);
+
+  it('4. syncs 6-span hierarchical trace tree, 4 online evaluator scores, and public share link to LangSmith (smith.langchain.com)', async () => {
+    const anonClient = createSupabaseAnonServerClient();
+    const { data: demoRun } = await anonClient
+      .from('runs')
+      .select('id')
+      .eq('is_demo', true)
+      .limit(1)
+      .single();
+    expect(demoRun?.id).toBeTruthy();
+
+    const bundle = await loadRunBundle(anonClient, demoRun!.id);
+    expect(bundle).not.toBeNull();
+
+    const langsmithResult = await syncAndShareRunBundleToLangSmith(bundle!);
+
+    console.log('Live LangSmith Trace & Evaluator Sync Result:', {
+      liveSynced: langsmithResult.liveSynced,
+      projectName: langsmithResult.projectName,
+      rootTraceId: langsmithResult.rootTraceId,
+      publicShareUrl: langsmithResult.publicShareUrl,
+      spansCount: langsmithResult.spans.length,
+      feedbackScores: langsmithResult.feedbackMetrics.map((m) => `${m.key}=${m.score}`),
+    });
+
+    expect(langsmithResult.configured).toBe(true);
+    expect(langsmithResult.liveSynced).toBe(true);
+    expect(langsmithResult.spans.length).toBe(6);
+    expect(langsmithResult.feedbackMetrics.length).toBe(4);
+    expect(langsmithResult.publicShareUrl).toContain('https://smith.langchain.com/public/');
+  }, 60000);
 });

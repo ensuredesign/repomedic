@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { traceNebiusLlmCallToLangSmith } from '@/lib/observability/langsmith';
 import { isPatchableSourcePath, redactSecrets } from '@/lib/security/redact';
 import {
   CopilotActionOutput,
@@ -355,12 +356,28 @@ export async function callNebiusStructured<T>(params: {
         throw new Error('Model returned empty content and empty reasoning_content.');
       }
 
+      const resolvedModelId = payload.model || modelToUse;
+      const resolvedRequestId = payload.id || requestId;
+      const inputTokens = payload.usage?.prompt_tokens ?? 0;
+      const outputTokens = payload.usage?.completion_tokens ?? 0;
+
+      void traceNebiusLlmCallToLangSmith({
+        name: `Nebius Token Factory · ${resolvedModelId}`,
+        modelId: resolvedModelId,
+        requestId: resolvedRequestId,
+        latencyMs,
+        inputTokens,
+        outputTokens,
+        promptSummary: params.userPrompt.slice(0, 600),
+        outputSummary: JSON.stringify(validated).slice(0, 800),
+      });
+
       return {
         data: validated,
-        modelId: payload.model || modelToUse,
-        requestId: payload.id || requestId,
-        inputTokens: payload.usage?.prompt_tokens ?? 0,
-        outputTokens: payload.usage?.completion_tokens ?? 0,
+        modelId: resolvedModelId,
+        requestId: resolvedRequestId,
+        inputTokens,
+        outputTokens,
         latencyMs,
       };
     } catch (err) {
