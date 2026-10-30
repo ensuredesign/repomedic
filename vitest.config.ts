@@ -3,10 +3,12 @@ import { loadEnv } from 'vite';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  for (const [k, v] of Object.entries(env)) {
-    if (process.env[k] === undefined) {
-      process.env[k] = v;
+  if (!process.env.VITEST_SIMULATE_PUBLIC_CI) {
+    const env = loadEnv(mode, process.cwd(), '');
+    for (const [k, v] of Object.entries(env)) {
+      if (process.env[k] === undefined) {
+        process.env[k] = v;
+      }
     }
   }
 
@@ -14,7 +16,7 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'node',
       include: ['tests/**/*.test.ts'],
-      exclude: ['node_modules', '.next', 'fixtures/**'],
+      exclude: ['node_modules', '.next', 'fixtures/**', 'remotion-demo/**'],
       testTimeout: 120000,
     },
     resolve: {
